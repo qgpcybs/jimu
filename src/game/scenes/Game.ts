@@ -1,4 +1,3 @@
-import { Vector } from "matter";
 import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
 
