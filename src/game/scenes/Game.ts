@@ -117,8 +117,8 @@ export class Game extends Scene {
 
     // Create Action: Draw tile
     onPrimaryDown(pointerTileXY: Phaser.Math.Vector2 | null) {
-        if (pointerTileXY != null) {
-            // Tile index transform & Draw tile
+        // Tile index transform & Draw tile
+        if (pointerTileXY != null && this.preDrawTile) {
             const tilesetColumns = this.groundLayer.tileset[0].columns;
             const tilesetRows = this.groundLayer.tileset[0].rows;
 
@@ -166,9 +166,6 @@ export class Game extends Scene {
                     );
                 }
             }
-            // const tileColumn = this.preDrawTile % 16;
-            // const tileRow = Math.floor(this.preDrawTile / 16);
-            // const finDrawTileIndex = tileRow * tilesetColumns + tileColumn;
         }
     }
 }
