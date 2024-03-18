@@ -1,5 +1,6 @@
 import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
+import * as Jimu from "../../managers/SceneManager";
 
 export class Game extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
@@ -60,7 +61,28 @@ export class Game extends Scene {
             this.map.tileWidth,
             this.map.tileHeight
         );
+        // console.log(this.groundLayer.data);
+        // const aaaa = JSON.stringify(this.groundLayer.data);
+        // console.log(aaaa);
+        // console.log(JSON.parse(aaaa));
 
+        const getReq = Jimu.SceneManager.loadTilemap("groundLayer");
+
+        getReq.onsuccess = (event) => {
+            const target = event.target as IDBOpenDBRequest;
+            // console.log(JSON.parse(target.result.data));
+
+            this.groundLayer.putTilesAt(JSON.parse(target.result.data), 0, 0);
+            // this.map = this.make.tilemap({
+            //     key: "test",
+            // });
+            // this.groundLayer = this.map.createBlankLayer("Ground Layer", [
+            //     tilesPrimalPlateauGrass,
+            // ]) as Phaser.Tilemaps.TilemapLayer;
+            // this.groundLayer = JSON.parse(target.result.data);
+        };
+
+        // console.log(this.groundLayer);
         EventBus.emit("current-scene-ready", this);
     }
 
@@ -99,7 +121,6 @@ export class Game extends Scene {
         EventBus.on(
             "paint-tiles",
             (stX: number, stY: number, edX?: number, edY?: number) => {
-                console.log(stX, stY);
                 this.preDrawTile = new Phaser.Math.Vector2(stX, stY);
                 if (edX && edY && edX > 0 && edY > 0) {
                     this.preDrawTile2 = new Phaser.Math.Vector2(edX, edY);
@@ -166,6 +187,18 @@ export class Game extends Scene {
                     );
                 }
             }
+
+
+            const output = this.groundLayer.layer.data;
+            const input: number[][] = [];
+            for (let i = 0; i < output.length; i++) {
+                input[i] = [];
+                for (let j = 0; j < output[i].length; j++) {
+                    input[i][j] = output[i][j].index;
+                }
+            }
+
+            Jimu.SceneManager.saveTileMap("groundLayer", JSON.stringify(input));
         }
     }
 }
