@@ -1,6 +1,7 @@
 import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
-import * as Jimu from "../../managers/SceneManager";
+import { SceneManager } from "../../managers/SceneManager";
+import { SceneDatabase } from "../../api/Scenes";
 
 export class Game extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
@@ -19,40 +20,91 @@ export class Game extends Scene {
     }
 
     create() {
-        this.onListener();
+        // Getting from the database
+        const getReq = SceneManager.loadTilemap("groundLayer");
+        getReq.onsuccess = (event: Event) => {
+            const target = event.target as IDBOpenDBRequest;
+            const database = target.result as SceneDatabase;
+            if (database) {
+                this.createFromDatabase(JSON.parse(database.data));
+            } else {
+                this.createNew();
+            }
 
-        // this.camera = this.cameras.main;
-        // this.controls = new Phaser.Cameras.Controls.FixedKeyControl()
+            // const tilesPrimalPlateauProps = this.map.addTilesetImage(
+            //     "tiles-primal_plateau-props"
+            // ) as Phaser.Tilemaps.Tileset;
 
+            // this.objectLayer = this.map.createBlankLayer(
+            //     "Object Layer",
+            //     tilesPrimalPlateauProps
+            // ) as Phaser.Tilemaps.TilemapLayer;
+        };
+        getReq.onerror = () => {
+            console.error("create scene error: getReq");
+        };
+    }
+
+    /**
+     * Init a new scene
+     */
+    createNew() {
+        // Create the map
+        const mapTileSize: number = 32;
+        const mapWidth: number = 40;
+        const mapHeight: number = 23;
         this.map = this.make.tilemap({
-            tileWidth: 32,
-            tileHeight: 32,
-            width: 40,
-            height: 23,
+            tileWidth: mapTileSize,
+            tileHeight: mapTileSize,
+            width: mapWidth,
+            height: mapHeight,
         });
 
-        // Load tilemap
+        // Load tilesets
         const tilesPrimalPlateauGrass = this.map.addTilesetImage(
             "tiles-primal_plateau-grass"
-        ) as Phaser.Tilemaps.Tileset;
-
-        const tilesPrimalPlateauProps = this.map.addTilesetImage(
-            "tiles-primal_plateau-props"
         ) as Phaser.Tilemaps.Tileset;
 
         this.groundLayer = this.map.createBlankLayer("Ground Layer", [
             tilesPrimalPlateauGrass,
         ]) as Phaser.Tilemaps.TilemapLayer;
 
-        this.objectLayer = this.map.createBlankLayer(
-            "Object Layer",
-            tilesPrimalPlateauProps
-        ) as Phaser.Tilemaps.TilemapLayer;
-
-        // Init ground
+        // Init with tile 0
         this.groundLayer.fill(0, 0, 0, this.map.width, this.map.height);
 
-        // Init selected box
+        // Complete
+        this.createCompleted();
+    }
+
+    /**
+     * Load an existed scene
+     * @param data An array of tiles data
+     */
+    createFromDatabase(data: number[][]) {
+        // Create the map
+        this.map = this.make.tilemap({
+            data: data,
+            tileWidth: 32,
+            tileHeight: 32,
+        });
+
+        // Load tilesets
+        const tilesPrimalPlateauGrass = this.map.addTilesetImage(
+            "tiles-primal_plateau-grass"
+        ) as Phaser.Tilemaps.Tileset;
+
+        this.groundLayer = this.map.createLayer(0, [
+            tilesPrimalPlateauGrass,
+        ]) as Phaser.Tilemaps.TilemapLayer;
+
+        // Complete
+        this.createCompleted();
+    }
+
+    loadTilesets() {}
+
+    createCompleted() {
+        // Init the selected box
         this.selectedBox = this.add.graphics();
         this.selectedBox.lineStyle(2, 0xffffff, 0.8);
         this.selectedBox.strokeRect(
@@ -61,32 +113,14 @@ export class Game extends Scene {
             this.map.tileWidth,
             this.map.tileHeight
         );
-        // console.log(this.groundLayer.data);
-        // const aaaa = JSON.stringify(this.groundLayer.data);
-        // console.log(aaaa);
-        // console.log(JSON.parse(aaaa));
 
-        const getReq = Jimu.SceneManager.loadTilemap("groundLayer");
-
-        getReq.onsuccess = (event) => {
-            const target = event.target as IDBOpenDBRequest;
-            // console.log(JSON.parse(target.result.data));
-
-            this.groundLayer.putTilesAt(JSON.parse(target.result.data), 0, 0);
-            // this.map = this.make.tilemap({
-            //     key: "test",
-            // });
-            // this.groundLayer = this.map.createBlankLayer("Ground Layer", [
-            //     tilesPrimalPlateauGrass,
-            // ]) as Phaser.Tilemaps.TilemapLayer;
-            // this.groundLayer = JSON.parse(target.result.data);
-        };
-
-        // console.log(this.groundLayer);
+        // Emit & listen event
         EventBus.emit("current-scene-ready", this);
+        this.onListener();
     }
 
     update(): void {
+        if (!this.map) return;
         // Update cursor position (e.g. tile selected box)
         const worldPoint = this.input.activePointer.positionToCamera(
             this.cameras.main
@@ -188,7 +222,7 @@ export class Game extends Scene {
                 }
             }
 
-
+            // Save to the database
             const output = this.groundLayer.layer.data;
             const input: number[][] = [];
             for (let i = 0; i < output.length; i++) {
@@ -197,8 +231,7 @@ export class Game extends Scene {
                     input[i][j] = output[i][j].index;
                 }
             }
-
-            Jimu.SceneManager.saveTileMap("groundLayer", JSON.stringify(input));
+            SceneManager.saveTileMap("groundLayer", JSON.stringify(input));
         }
     }
 }

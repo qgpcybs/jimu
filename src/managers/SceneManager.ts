@@ -1,60 +1,73 @@
 export class SceneManager {
     static indexedDB: IDBFactory = window.indexedDB;
+    static version: number = 1;
     static tableName = "Tilemaps";
     static openReq: IDBOpenDBRequest;
-    static database: IDBDatabase;
-
-    static enableStoreLocally(): IDBFactory {
-        return window.indexedDB;
-    }
+    static tableDatabase: IDBDatabase;
 
     static init() {
-        SceneManager.openReq = SceneManager.indexedDB.open("Jimu", 1);
+        if (SceneManager.enableStoreLocally()) {
+            // Connecting to the database
+            SceneManager.openReq = SceneManager.indexedDB.open(
+                "Jimu",
+                SceneManager.version
+            );
 
-        SceneManager.openReq.onupgradeneeded = function (event) {
-            SceneManager.database = (event.target as IDBOpenDBRequest).result;
-            SceneManager.database.createObjectStore(SceneManager.tableName, {
-                keyPath: "id",
-            });
-        };
+            // If database version update
+            SceneManager.openReq.onupgradeneeded = function (event) {
+                // Create scenes table
+                SceneManager.tableDatabase = (
+                    event.target as IDBOpenDBRequest
+                ).result;
+                // Update database
+                SceneManager.tableDatabase.createObjectStore(
+                    SceneManager.tableName,
+                    {
+                        keyPath: "id",
+                    }
+                );
+            };
 
-        SceneManager.openReq.onsuccess = function (event) {
-            SceneManager.database = (event.target as IDBOpenDBRequest).result;
-        };
+            // If database version no update
+            SceneManager.openReq.onsuccess = function (event) {
+                // Update database
+                SceneManager.tableDatabase = (
+                    event.target as IDBOpenDBRequest
+                ).result;
+            };
+        } else {
+            console.warn("Can't use indexedDB.");
+        }
     }
 
-    static saveTileMap(tilemapName: string, data) {
-        // const openReq = SceneManager.indexedDB.open("Jimu");
-        // SceneManager.openReq.onsuccess = function (event) {
-        //     const target = event.target as IDBOpenDBRequest;
-        //     const db = target.result;
-
-        // 录入
-        const trans1 = SceneManager.database.transaction(
+    /**
+     * Save the tilemap
+     * @param tilemapName the name of the tilemap
+     * @param data the tileset data
+     */
+    static saveTileMap(tilemapName: string, data: string) {
+        // Create a transaction
+        const trans = SceneManager.tableDatabase.transaction(
             [SceneManager.tableName],
             "readwrite"
         );
-        const store1 = trans1.objectStore(SceneManager.tableName);
-        const putReq = store1.put({ id: tilemapName, data: data });
-        putReq.onsuccess = () => {
-            // console.log(JSON.parse(data));
-        };
-        // };
+        // Get the table
+        const table = trans.objectStore(SceneManager.tableName);
+        // Write the data
+        const putReq = table.put({ id: tilemapName, data: data });
+        putReq.onsuccess = () => {};
     }
 
     static loadTilemap(tilemapName: string) {
-        // const openReq = SceneManager.indexedDB.open("Jimu");
-        // SceneManager.openReq.onsuccess = function (event) {
-        // const target = event.target as IDBOpenDBRequest;
-        // const db = target.result;
-        const trans = SceneManager.database.transaction(
+        const trans = SceneManager.tableDatabase.transaction(
             SceneManager.tableName,
             "readonly"
         );
         const store = trans.objectStore(SceneManager.tableName);
-        // console.log(store);
         return store.get(tilemapName);
+    }
 
-        // };
+    static enableStoreLocally(): IDBFactory {
+        return window.indexedDB;
     }
 }
