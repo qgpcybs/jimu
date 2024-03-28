@@ -25,7 +25,7 @@ export class Game extends Scene {
 
     create() {
         // Getting from the database
-        const getReq = SceneManager.loadTilemap("groundLayer");
+        const getReq = SceneManager.loadTilemap("0");
         getReq.onsuccess = (event: Event) => {
             const target = event.target as IDBOpenDBRequest;
             const database = target.result as SceneDatabase;
@@ -351,7 +351,7 @@ export class Game extends Scene {
                     input[i][j] = output[i][j].index;
                 }
             }
-            SceneManager.saveTileMap("groundLayer", JSON.stringify(input));
+            SceneManager.saveTileMap("0", JSON.stringify(input));
         }
     }
 

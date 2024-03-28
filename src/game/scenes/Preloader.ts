@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { SceneManager } from "../../managers/SceneManager";
+// import { SceneManager } from "../../managers/SceneManager";
 
 export class Preloader extends Scene {
     constructor() {
@@ -19,8 +19,8 @@ export class Preloader extends Scene {
         //     bar.width = 4 + (460 * progress);
         // });
 
-        // Init the current scene
-        SceneManager.init();
+        // // Init the current scene
+        // SceneManager.init();
     }
 
     preload() {

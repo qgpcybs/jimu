@@ -4,8 +4,17 @@ import { MainMenu } from "./game/scenes/MainMenu";
 import { Game } from "./game/scenes/Game";
 import TilePalette from "./components/sceneEditor/TilePalette";
 import { EventBus } from "./game/EventBus";
+import { Button, ButtonGroup } from "@chakra-ui/react";
+import { SceneManager } from "./managers/SceneManager";
+
+function editorInit() {
+    SceneManager.init();
+}
 
 function App() {
+    // Init Jimu
+    editorInit();
+
     // // The sprite can only be moved in the MainMenu Scene
     const [canMoveSprite, setCanMoveSprite] = useState(true);
 
@@ -79,12 +88,36 @@ function App() {
     return (
         <div id="app">
             <div className="topBar h-32"></div>
-            <div className="projectArea pl-24 absolute -z-10">
-                <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
-            </div>
-            <div className="mainContent flex">
-                <div className="absolute right-0 w-[32rem] h-[64rem]">
-                    <TilePalette onSelectTiles={handleSelectTiles} />
+            <div className="flex flex-row">
+                <div className="w-36 flex-col flex p-2">
+                    <span>Scene</span>
+                    <ButtonGroup className="flex-col space-x-0 space-y-2">
+                        <Button
+                            colorScheme="teal"
+                            variant="outline"
+                            onClick={() => {
+                                SceneManager.createScene();
+                            }}
+                        >
+                            Scene1
+                        </Button>
+                        <Button colorScheme="teal" variant="outline">
+                            Scene2
+                        </Button>
+                    </ButtonGroup>
+                </div>
+                <div className="relative">
+                    <div className="projectArea absolute -z-10">
+                        <PhaserGame
+                            ref={phaserRef}
+                            currentActiveScene={currentScene}
+                        />
+                    </div>
+                </div>
+                <div className="mainContent flex">
+                    <div className="absolute right-0 w-[32rem] h-[64rem]">
+                        <TilePalette onSelectTiles={handleSelectTiles} />
+                    </div>
                 </div>
             </div>
         </div>
