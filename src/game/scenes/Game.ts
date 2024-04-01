@@ -18,9 +18,11 @@ export class Game extends Scene {
     oldDrawTiles: SimpleTile[][];
     unDoing: boolean;
     isDrawAreaChanged: boolean;
+    isCreateCompleted: boolean;
 
     constructor() {
         super("Game");
+        this.isCreateCompleted = false;
     }
 
     create() {
@@ -130,6 +132,7 @@ export class Game extends Scene {
 
         // Emit & listen event
         EventBus.emit("current-scene-ready", this);
+        this.isCreateCompleted = true;
         this.onListener();
     }
 
@@ -137,12 +140,12 @@ export class Game extends Scene {
      * Automatically executed once per frame
      */
     update(): void {
+        if (!this.isCreateCompleted) return;
         if (!this.map) return;
         // Update cursor position (e.g. tile selected box)
         const worldPoint = this.input.activePointer.positionToCamera(
             this.cameras.main
         ) as Phaser.Math.Vector2;
-
         const pointerTileXY = this.map.worldToTileXY(
             worldPoint.x,
             worldPoint.y

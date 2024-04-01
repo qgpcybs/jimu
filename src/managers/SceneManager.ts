@@ -99,6 +99,9 @@ export class SceneManager {
 
                 // Create the scene by id
                 table.add(sceneData);
+
+                // Update infomation
+                SceneManager.updateScenesInfo();
             }
         };
     }
