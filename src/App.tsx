@@ -40,8 +40,10 @@ function App() {
     >([]);
 
     // Event emitted from the PhaserGame component
-    const currentScene = (_scene: Phaser.Scene) => {
-        // setCanMoveSprite(scene.scene.key !== "MainMenu");
+    const [currentScene, setCurrentScene] = useState<Phaser.Scene>();
+
+    const currentSceneFunc = (_scene: Phaser.Scene) => {
+        setCurrentScene(_scene);
     };
 
     const handleSelectTiles = (
@@ -69,7 +71,7 @@ function App() {
                     <div id="projectArea" className="">
                         <PhaserGame
                             ref={phaserRef}
-                            currentActiveScene={currentScene}
+                            currentActiveScene={currentSceneFunc}
                         />
                     </div>
                 </div>
@@ -98,7 +100,12 @@ function App() {
                                                 colorScheme="teal"
                                                 variant="outline"
                                                 onClick={() => {
-                                                    // SceneManager.updateScenesInfo();
+                                                    currentScene?.scene.start(
+                                                        "Game",
+                                                        {
+                                                            id: _i,
+                                                        }
+                                                    );
                                                 }}
                                             >
                                                 Scene1

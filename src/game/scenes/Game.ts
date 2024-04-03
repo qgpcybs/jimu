@@ -16,6 +16,7 @@ export class Game extends Scene {
     selectedBox: Phaser.GameObjects.Graphics;
     oldDrawPointerTileXY: Phaser.Math.Vector2 | null;
     oldDrawTiles: SimpleTile[][];
+    sceneId: number;
     unDoing: boolean;
     isDrawAreaChanged: boolean;
 
@@ -23,9 +24,10 @@ export class Game extends Scene {
         super("Game");
     }
 
-    create() {
+    create(data = { id: 0 }) {
+        this.sceneId = data.id;
         // Getting from the database
-        const getReq = SceneManager.loadTilemap(0);
+        const getReq = SceneManager.loadTilemap(this.sceneId);
         getReq.onsuccess = (event: Event) => {
             const target = event.target as IDBOpenDBRequest;
             const database = target.result as SceneDatabase;
@@ -353,7 +355,7 @@ export class Game extends Scene {
                     input[i][j] = output[i][j].index;
                 }
             }
-            SceneManager.saveTileMap(0, input);
+            SceneManager.saveTileMap(this.sceneId, input);
         }
     }
 

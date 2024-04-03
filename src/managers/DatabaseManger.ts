@@ -38,7 +38,6 @@ export class DatabaseManager {
                         keyPath: "id",
                     }
                 );
-                if (callback) callback();
             };
 
             // If database version no update
