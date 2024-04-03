@@ -1,5 +1,5 @@
 export interface SceneDatabase extends IDBDatabase {
-    data: string;
+    data: number[][];
 }
 
 export interface SceneInfo {

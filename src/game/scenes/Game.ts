@@ -18,21 +18,19 @@ export class Game extends Scene {
     oldDrawTiles: SimpleTile[][];
     unDoing: boolean;
     isDrawAreaChanged: boolean;
-    isCreateCompleted: boolean;
 
     constructor() {
         super("Game");
-        this.isCreateCompleted = false;
     }
 
     create() {
         // Getting from the database
-        const getReq = SceneManager.loadTilemap("0");
+        const getReq = SceneManager.loadTilemap(0);
         getReq.onsuccess = (event: Event) => {
             const target = event.target as IDBOpenDBRequest;
             const database = target.result as SceneDatabase;
             if (database) {
-                this.createFromDatabase(JSON.parse(database.data));
+                this.createFromDatabase(database.data);
             } else {
                 this.createNew();
             }
@@ -132,7 +130,6 @@ export class Game extends Scene {
 
         // Emit & listen event
         EventBus.emit("current-scene-ready", this);
-        this.isCreateCompleted = true;
         this.onListener();
     }
 
@@ -140,12 +137,14 @@ export class Game extends Scene {
      * Automatically executed once per frame
      */
     update(): void {
-        if (!this.isCreateCompleted) return;
-        if (!this.map) return;
+        // The map has been loaded or created
+        if (!this.map || this.map.layers.length < 1) return;
+
         // Update cursor position (e.g. tile selected box)
         const worldPoint = this.input.activePointer.positionToCamera(
             this.cameras.main
         ) as Phaser.Math.Vector2;
+
         const pointerTileXY = this.map.worldToTileXY(
             worldPoint.x,
             worldPoint.y
@@ -354,7 +353,7 @@ export class Game extends Scene {
                     input[i][j] = output[i][j].index;
                 }
             }
-            SceneManager.saveTileMap("0", JSON.stringify(input));
+            SceneManager.saveTileMap(0, input);
         }
     }
 

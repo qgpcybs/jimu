@@ -112,10 +112,10 @@ export class SceneManager {
 
     /**
      * Save the tilemap
-     * @param tilemapName the name of the tilemap
+     * @param id the id of the tilemap
      * @param data the tileset data
      */
-    static saveTileMap(tilemapName: string, data: string) {
+    static saveTileMap(id: number, data: number[][]) {
         // Create a transaction
         const trans = DatabaseManager.indexedDB.transaction(
             [SceneManager.TABLENAME],
@@ -124,22 +124,22 @@ export class SceneManager {
         // Get the table
         const table = trans.objectStore(SceneManager.TABLENAME);
         // Write the data
-        const putReq = table.put({ id: tilemapName, data: data });
+        const putReq = table.put({ id: id, data: data });
         putReq.onsuccess = () => {};
     }
 
     /**
      * Load the tilemap
-     * @param tilemapName the name of the tilemap
+     * @param id the id of the tilemap
      * @returns the tileset data
      */
-    static loadTilemap(tilemapName: string): IDBRequest {
+    static loadTilemap(id: number): IDBRequest {
         const trans = DatabaseManager.indexedDB.transaction(
             SceneManager.TABLENAME,
             "readonly"
         );
         const store = trans.objectStore(SceneManager.TABLENAME);
-        return store.get(tilemapName);
+        return store.get(id);
     }
 
     static enableStoreLocally(): IDBFactory {
