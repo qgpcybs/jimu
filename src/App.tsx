@@ -22,6 +22,23 @@ import { DatabaseManager } from "./managers/DatabaseManger";
  * Entrance function
  */
 function App() {
+    //================================================================
+    // ■ Define
+    //================================================================
+    // References to the PhaserGame component (game and scene are exposed)
+    const phaserRef = useRef<IRefPhaserGame | null>(null);
+
+    // Scenes Infomation
+    [SceneManager.scenesInfo, SceneManager.setScenesInfo] = useState<
+        SceneInfo[]
+    >([]);
+
+    // Current scene
+    const [currentScene, setCurrentScene] = useState<Phaser.Scene>();
+
+    //================================================================
+    // ■ Function
+    //================================================================
     // Init the Jimu Editor
     const editorInit = () => {
         // Open database
@@ -31,21 +48,12 @@ function App() {
         });
     };
 
-    //  References to the PhaserGame component (game and scene are exposed)
-    const phaserRef = useRef<IRefPhaserGame | null>(null);
-
-    // Scenes Info
-    [SceneManager.scenesInfo, SceneManager.setScenesInfo] = useState<
-        SceneInfo[]
-    >([]);
-
-    // Event emitted from the PhaserGame component
-    const [currentScene, setCurrentScene] = useState<Phaser.Scene>();
-
+    // Switch scenes
     const currentSceneFunc = (_scene: Phaser.Scene) => {
         setCurrentScene(_scene);
     };
 
+    // Paint tiles
     const handleSelectTiles = (
         stX: number,
         stY: number,
@@ -55,6 +63,9 @@ function App() {
         EventBus.emit("paint-tiles", stX, stY, edX, edY);
     };
 
+    //================================================================
+    // ■ Init
+    //================================================================
     useEffect(() => {
         // Init Jimu
         editorInit();
