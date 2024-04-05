@@ -134,7 +134,6 @@ export class SceneManager {
      * @returns the tileset data
      */
     static loadTilemap(id: number): IDBRequest {
-        console.log(id)
         const trans = DatabaseManager.indexedDB.transaction(
             SceneManager.TABLENAME,
             "readonly"
