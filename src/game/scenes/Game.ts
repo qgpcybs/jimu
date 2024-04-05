@@ -16,6 +16,7 @@ export class Game extends Scene {
     selectedBox: Phaser.GameObjects.Graphics;
     oldDrawPointerTileXY: Phaser.Math.Vector2 | null;
     oldDrawTiles: SimpleTile[][];
+    sceneId: number;
     unDoing: boolean;
     isDrawAreaChanged: boolean;
 
@@ -23,14 +24,15 @@ export class Game extends Scene {
         super("Game");
     }
 
-    create() {
+    create(data = { id: 0 }) {
+        this.sceneId = data.id;
         // Getting from the database
-        const getReq = SceneManager.loadTilemap("groundLayer");
+        const getReq = SceneManager.loadTilemap(this.sceneId);
         getReq.onsuccess = (event: Event) => {
             const target = event.target as IDBOpenDBRequest;
             const database = target.result as SceneDatabase;
             if (database) {
-                this.createFromDatabase(JSON.parse(database.data));
+                this.createFromDatabase(database.data);
             } else {
                 this.createNew();
             }
@@ -137,7 +139,9 @@ export class Game extends Scene {
      * Automatically executed once per frame
      */
     update(): void {
-        if (!this.map) return;
+        // The map has been loaded or created
+        if (!this.map || this.map.layers.length < 1) return;
+
         // Update cursor position (e.g. tile selected box)
         const worldPoint = this.input.activePointer.positionToCamera(
             this.cameras.main
@@ -200,9 +204,14 @@ export class Game extends Scene {
         this.input.keyboard?.on("keydown-Z", (event: KeyboardEvent) => {
             // Input: Ctrl + Z
             if (event.ctrlKey) {
-                console.log("后退");
-                // Common Action: Undo
-                this.undoLastDraw();
+                if (event.shiftKey) {
+                    // Common Action: Redo
+                    console.log("Redo");
+                } else {
+                    // Common Action: Undo
+                    console.log("Undo");
+                    this.undoLastDraw();
+                }
             }
         });
     }
@@ -249,10 +258,6 @@ export class Game extends Scene {
 
             // Each time save one action of drawing old tiles
             const oldDrawTilesTime = this.oldDrawTiles.length;
-            const currentOldDrawTiles: SimpleTile[] = (this.oldDrawTiles[
-                oldDrawTilesTime
-            ] = []);
-
             if (this.preDrawTile2) {
                 // The 2st tile means to draw an area
                 const finDrawTilesIndex: number[][] = [];
@@ -290,7 +295,15 @@ export class Game extends Scene {
                                 pastDrawY < this.map.height
                             ) {
                                 // Position must inside the map
-                                currentOldDrawTiles.push({
+                                console.log(
+                                    this.oldDrawTiles[oldDrawTilesTime]
+                                );
+                                if (
+                                    this.oldDrawTiles[oldDrawTilesTime] ===
+                                    undefined
+                                )
+                                    this.oldDrawTiles[oldDrawTilesTime] = [];
+                                this.oldDrawTiles[oldDrawTilesTime].push({
                                     x: pastDrawX,
                                     y: pastDrawY,
                                     index: this.groundLayer.layer.data[
@@ -316,7 +329,8 @@ export class Game extends Scene {
                     finDrawTileIndex < tilesetColumns * tilesetRows
                 ) {
                     // Add to the record of past drawing
-                    currentOldDrawTiles.push({
+                    this.oldDrawTiles[oldDrawTilesTime] = [];
+                    this.oldDrawTiles[oldDrawTilesTime].push({
                         x: pointerTileXY.x,
                         y: pointerTileXY.y,
                         index: this.groundLayer.layer.data[pointerTileXY.y][
@@ -341,7 +355,7 @@ export class Game extends Scene {
                     input[i][j] = output[i][j].index;
                 }
             }
-            SceneManager.saveTileMap("groundLayer", JSON.stringify(input));
+            SceneManager.saveTileMap(this.sceneId, input);
         }
     }
 

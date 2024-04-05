@@ -1,5 +1,10 @@
 export interface SceneDatabase extends IDBDatabase {
-    data: string;
+    data: number[][];
+}
+
+export interface SceneInfo {
+    id: number | IDBValidKey;
+    name: string;
 }
 
 export interface SimpleTile {

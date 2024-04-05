@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { SceneManager } from "../../managers/SceneManager";
+import { EventBus } from "../EventBus";
 
 export class Preloader extends Scene {
     constructor() {
@@ -18,9 +18,8 @@ export class Preloader extends Scene {
         //     //  Update the progress bar (our bar is 464px wide, so 100% = 464px)
         //     bar.width = 4 + (460 * progress);
         // });
-
-        // Init the current scene
-        SceneManager.init();
+        // // Init the current scene
+        // SceneManager.init();
     }
 
     preload() {
@@ -45,6 +44,8 @@ export class Preloader extends Scene {
         //  For example, you can define global animations here, so we can use them in other scenes.
 
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-        this.scene.start("Game");
+        EventBus.on("editor-init-over", () => {
+            this.scene.start("Game", { id: 0 });
+        });
     }
 }
