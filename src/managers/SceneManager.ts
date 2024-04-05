@@ -1,4 +1,10 @@
-import { SceneInfo, LayerInfo } from "../api/Scenes";
+import {
+    SceneDatabase,
+    SceneData,
+    LayerData,
+    SceneInfo,
+    LayerInfo,
+} from "../api/Scenes";
 import { DatabaseManager } from "./DatabaseManger";
 import { EventBus } from "../game/EventBus";
 export class SceneManager {
@@ -57,12 +63,12 @@ export class SceneManager {
     /**
      * [Async] Create a new scene
      * The primary key is id
-     * @param tilemapName The name of scene
+     * @param sceneName The name of scene
      * @param width The width of scene
      * @param height The height of scene
      */
     static createScene(
-        tilemapName: string = "abab",
+        sceneName: string = "abab",
         width: number = 40,
         height: number = 23
     ) {
@@ -94,18 +100,26 @@ export class SceneManager {
                     }
                 }
 
-                // Construct the scene data
-                const sceneData = {
-                    id: newId,
-                    name: tilemapName,
+                // Construct the layer data
+                const layerData: LayerData = {
+                    id: 0,
+                    name: "New layer",
+                    type: "tilemap",
                     data: [] as number[][],
                 };
                 for (let i = 0; i < height; i++) {
-                    sceneData.data[i] = [];
+                    layerData.data[i] = [];
                     for (let j = 0; j < width; j++) {
-                        sceneData.data[i][j] = 32;
+                        layerData.data[i][j] = 32;
                     }
                 }
+
+                // Construct the scene data
+                const sceneData: SceneData = {
+                    id: newId,
+                    name: sceneName,
+                    layers: [layerData],
+                };
 
                 // Create the scene by id
                 table.add(sceneData);
@@ -126,11 +140,7 @@ export class SceneManager {
      * @param layerId
      * @param data the tileset data
      */
-    static saveTileMap(
-        id: number,
-        // layer: Phaser.Tilemaps.TilemapLayer,
-        data: number[][]
-    ) {
+    static saveTileMap(id: number, layerId: number, data: number[][]) {
         // Create a transaction
         const trans = DatabaseManager.indexedDB.transaction(
             [SceneManager.TABLENAME],
@@ -138,9 +148,36 @@ export class SceneManager {
         );
         // Get the table
         const table = trans.objectStore(SceneManager.TABLENAME);
-        // Write the data
-        const putReq = table.put({ id: id, data: data });
-        putReq.onsuccess = () => {};
+
+        let sceneData: SceneData;
+        let layerData: LayerData;
+
+        // Get the previous database
+        const getReq = table.get(id);
+        getReq.onsuccess = (event: Event) => {
+            const target = event.target as IDBOpenDBRequest;
+            const preDatabase = target.result as SceneDatabase;
+
+            // Update database
+            if (preDatabase) {
+                sceneData = preDatabase;
+                layerData = sceneData.layers[layerId];
+            } else {
+                layerData = {
+                    id: layerId,
+                    name: "aaa",
+                    type: "tilemap",
+                    data: [],
+                };
+                sceneData = { id: id, layers: [layerData] };
+            }
+            layerData.data = data;
+
+            // Write database
+            const putReq = table.put(sceneData);
+            // table.
+            // putReq.onsuccess = () => {};
+        };
     }
 
     /**
@@ -148,7 +185,7 @@ export class SceneManager {
      * @param id the id of the tilemap
      * @returns the tileset data
      */
-    static loadTilemap(id: number): IDBRequest {
+    static loadScene(id: number): IDBRequest {
         const trans = DatabaseManager.indexedDB.transaction(
             SceneManager.TABLENAME,
             "readonly"

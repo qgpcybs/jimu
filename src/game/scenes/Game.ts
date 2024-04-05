@@ -1,7 +1,7 @@
 import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
 import { SceneManager } from "../../managers/SceneManager";
-import { SceneDatabase, SimpleTile } from "../../api/Scenes";
+import { SceneDatabase, LayerData, SimpleTile } from "../../api/Scenes";
 
 export class Game extends Scene {
     sceneId: number;
@@ -31,12 +31,12 @@ export class Game extends Scene {
 
     create() {
         // Getting from the database
-        const getReq = SceneManager.loadTilemap(this.sceneId);
+        const getReq = SceneManager.loadScene(this.sceneId);
         getReq.onsuccess = (event: Event) => {
             const target = event.target as IDBOpenDBRequest;
             const database = target.result as SceneDatabase;
             if (database) {
-                this.createFromDatabase(database.data);
+                this.createFromDatabase(database);
             } else {
                 this.createNew();
             }
@@ -91,9 +91,15 @@ export class Game extends Scene {
 
     /**
      * Load an existed scene
-     * @param data An array of tiles data
+     * @param database scene's database
      */
-    createFromDatabase(data: number[][]) {
+    createFromDatabase(database: SceneDatabase) {
+        // Get the first layer data
+        const layerData: LayerData = database.layers[0];
+
+        // Get the array of tiles data
+        const data: number[][] = layerData.data;
+
         // Create the map
         this.tilemap = this.make.tilemap({
             data: data,
@@ -218,6 +224,7 @@ export class Game extends Scene {
             if (event.ctrlKey) {
                 if (event.shiftKey) {
                     // Common Action: Redo
+                    // TODO
                     console.log("Redo");
                 } else {
                     // Common Action: Undo
@@ -369,7 +376,7 @@ export class Game extends Scene {
                     input[i][j] = output[i][j].index;
                 }
             }
-            SceneManager.saveTileMap(this.sceneId, input);
+            SceneManager.saveTileMap(this.sceneId, 0, input);
         }
     }
 

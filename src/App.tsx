@@ -158,7 +158,15 @@ function App() {
                                 <List spacing={2}>
                                     {/* TODO */}
                                     {SceneManager.layersInfo.map((_t, _i) => (
-                                        <ListItem key={_i}></ListItem>
+                                        <ListItem key={_i}>
+                                            <Button
+                                                colorScheme="teal"
+                                                variant={"outline"}
+                                                onClick={() => {
+                                                    // TODO
+                                                }}
+                                            ></Button>
+                                        </ListItem>
                                     ))}
                                 </List>
                             </AccordionPanel>

@@ -1,4 +1,19 @@
 export interface SceneDatabase extends IDBDatabase {
+    id: number;
+    name:string;
+    layers: LayerData[];
+}
+
+export interface SceneData {
+    id: number;
+    name:string;
+    layers: LayerData[];
+}
+
+export interface LayerData {
+    id: number;
+    name: string;
+    type: string;
     data: number[][];
 }
 
