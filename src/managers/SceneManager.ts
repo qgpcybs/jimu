@@ -1,4 +1,4 @@
-import { SceneInfo } from "../api/Scenes";
+import { SceneInfo, LayerInfo } from "../api/Scenes";
 import { DatabaseManager } from "./DatabaseManger";
 import { EventBus } from "../game/EventBus";
 export class SceneManager {
@@ -16,6 +16,16 @@ export class SceneManager {
      * [Set] The brief infomation of scenes
      */
     static setScenesInfo: React.Dispatch<React.SetStateAction<SceneInfo[]>>;
+
+    /**
+     * The brief infomation of scene layers
+     */
+    static layersInfo: LayerInfo[] = [];
+
+    /**
+     * [Set] The brief infomation of scene layers
+     */
+    static setLayersInfo: React.Dispatch<React.SetStateAction<LayerInfo[]>>;
 
     /**
      * Update the brief infomation of scenes
@@ -113,9 +123,14 @@ export class SceneManager {
     /**
      * Save the tilemap
      * @param id the id of the tilemap
+     * @param layerId
      * @param data the tileset data
      */
-    static saveTileMap(id: number, data: number[][]) {
+    static saveTileMap(
+        id: number,
+        // layer: Phaser.Tilemaps.TilemapLayer,
+        data: number[][]
+    ) {
         // Create a transaction
         const trans = DatabaseManager.indexedDB.transaction(
             [SceneManager.TABLENAME],
