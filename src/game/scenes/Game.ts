@@ -27,6 +27,7 @@ export class Game extends Scene {
     init(data = { id: 0 }) {
         this.sceneId = data.id;
         this.layers = [];
+        SceneManager.updateLayersInfo(this.sceneId);
     }
 
     create() {

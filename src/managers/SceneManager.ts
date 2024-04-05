@@ -14,27 +14,27 @@ export class SceneManager {
     static TABLENAME = DatabaseManager.TABLENAME_SCENES;
 
     /**
-     * The brief infomation of scenes
+     * The brief information of scenes
      */
     static scenesInfo: SceneInfo[] = [];
 
     /**
-     * [Set] The brief infomation of scenes
+     * [Set] The brief information of scenes
      */
     static setScenesInfo: React.Dispatch<React.SetStateAction<SceneInfo[]>>;
 
     /**
-     * The brief infomation of scene layers
+     * The brief information of scene layers
      */
     static layersInfo: LayerInfo[] = [];
 
     /**
-     * [Set] The brief infomation of scene layers
+     * [Set] The brief information of scene layers
      */
     static setLayersInfo: React.Dispatch<React.SetStateAction<LayerInfo[]>>;
 
     /**
-     * Update the brief infomation of scenes
+     * Update the brief information of scenes
      */
     static updateScenesInfo() {
         const trans = DatabaseManager.indexedDB.transaction(
@@ -57,6 +57,36 @@ export class SceneManager {
                 SceneManager.setScenesInfo(_scenesInfo);
                 EventBus.emit("editor-init-over");
             }
+        };
+        openCursor.onerror = () => {
+            console.log("Error: updateScenesInfo");
+        };
+    }
+
+    /**
+     * Update the brief information of layers
+     * @param sceneId The id of the scene
+     */
+    static updateLayersInfo(sceneId: number) {
+        const _layersInfo: LayerInfo[] = [];
+        const getReq = SceneManager.loadScene(sceneId);
+        getReq.onsuccess = (event: Event) => {
+            const target = event.target as IDBOpenDBRequest;
+            const database = target.result as SceneDatabase;
+            if (database?.layers) {
+                const layerData = database.layers;
+                for (let i = 0; i < layerData.length; i++) {
+                    _layersInfo[i] = {
+                        id: layerData[i].id,
+                        name: layerData[i].name,
+                        type: layerData[i].type,
+                    };
+                }
+            }
+            SceneManager.setLayersInfo(_layersInfo);
+        };
+        getReq.onerror = () => {
+            console.log("Error: updateLayersInfo");
         };
     }
 
@@ -124,7 +154,7 @@ export class SceneManager {
                 // Create the scene by id
                 table.add(sceneData);
 
-                // Update infomation
+                // Update information
                 SceneManager.updateScenesInfo();
             }
         };

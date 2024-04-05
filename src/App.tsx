@@ -28,7 +28,7 @@ function App() {
     // References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
-    // Scenes infomation
+    // Scenes information
     [SceneManager.scenesInfo, SceneManager.setScenesInfo] = useState<
         SceneInfo[]
     >([]);
@@ -36,7 +36,7 @@ function App() {
     // Current scene
     const [currentScene, setCurrentScene] = useState<Phaser.Scene>();
 
-    // Layers infomation
+    // Layers information
     [SceneManager.layersInfo, SceneManager.setLayersInfo] = useState<
         LayerInfo[]
     >([]);
@@ -52,7 +52,7 @@ function App() {
     const editorInit = () => {
         // Open database
         DatabaseManager.init(() => {
-            // Get scenes infomation
+            // Get scenes information
             SceneManager.updateScenesInfo();
         });
     };
@@ -105,7 +105,7 @@ function App() {
                 </div>
 
                 <div className="min-w-48 flex-col flex bg-white bg-opacity-75 z-[1]">
-                    <Accordion defaultIndex={[0]} allowMultiple>
+                    <Accordion defaultIndex={[0, 1]} allowMultiple>
                         {/* Scenes list */}
                         <AccordionItem id="scenesList">
                             <AccordionButton>
@@ -165,7 +165,12 @@ function App() {
                                                 onClick={() => {
                                                     // TODO
                                                 }}
-                                            ></Button>
+                                            >
+                                                {
+                                                    SceneManager.layersInfo[_i]
+                                                        .name
+                                                }
+                                            </Button>
                                         </ListItem>
                                     ))}
                                 </List>
