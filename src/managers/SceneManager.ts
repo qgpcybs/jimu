@@ -100,7 +100,8 @@ export class SceneManager {
     static createScene(
         sceneName: string = "abab",
         width: number = 40,
-        height: number = 23
+        height: number = 23,
+        callback?: () => void
     ) {
         // Create a transaction
         const trans = DatabaseManager.indexedDB.transaction(
@@ -156,6 +157,9 @@ export class SceneManager {
 
                 // Update information
                 SceneManager.updateScenesInfo();
+
+                // Callback
+                if (callback) callback();
             }
         };
     }
@@ -199,6 +203,7 @@ export class SceneManager {
                     type: "tilemap",
                     data: [],
                 };
+                console.log(111);
                 sceneData = { id: id, layers: [layerData] };
             }
             layerData.data = data;
