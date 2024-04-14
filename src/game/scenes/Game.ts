@@ -36,20 +36,8 @@ export class Game extends Scene {
         getReq.onsuccess = (event: Event) => {
             const target = event.target as IDBOpenDBRequest;
             const database = target.result as SceneDatabase;
-            // If havn't created any scenes
-            if (database) {
-                this.createFromDatabase(database);
-            } else {
-                SceneManager.createScene("New Scene", 40, 23, () => {
-                    this.createFromDatabase(database);
-                });
-            }
 
-            // if (database) {
-            //     this.createFromDatabase(database);
-            // } else {
-            //     this.createNew();
-            // }
+            this.createFromDatabase(database);
 
             // const tilesPrimalPlateauProps = this.map.addTilesetImage(
             //     "tiles-primal_plateau-props"

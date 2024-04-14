@@ -53,7 +53,17 @@ function App() {
         // Open database
         DatabaseManager.init(() => {
             // Get scenes information
-            SceneManager.updateScenesInfo();
+            SceneManager.updateScenesInfo(() => {
+                console.log(SceneManager.scenesInfo);
+                // Have any scenes been created?
+                if (SceneManager.scenesInfo.length < 1) {
+                    SceneManager.createScene("New Scene", 40, 23, 0, () => {
+                        EventBus.emit("editor-init-over");
+                    });
+                } else {
+                    EventBus.emit("editor-init-over");
+                }
+            });
         });
     };
 

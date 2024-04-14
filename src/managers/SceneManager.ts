@@ -36,7 +36,7 @@ export class SceneManager {
     /**
      * Update the brief information of scenes
      */
-    static updateScenesInfo() {
+    static updateScenesInfo(callback?: () => void) {
         const trans = DatabaseManager.indexedDB.transaction(
             [SceneManager.TABLENAME],
             "readonly"
@@ -55,7 +55,10 @@ export class SceneManager {
                 item.continue();
             } else {
                 SceneManager.setScenesInfo(_scenesInfo);
-                EventBus.emit("editor-init-over");
+                // EventBus.emit("editor-init-over");
+
+                // Callback
+                if (callback) callback();
             }
         };
         openCursor.onerror = () => {
@@ -96,11 +99,13 @@ export class SceneManager {
      * @param sceneName The name of scene
      * @param width The width of scene
      * @param height The height of scene
+     * @param id The index of scene. If the id has been used, the operation is invalidated
      */
     static createScene(
         sceneName: string = "abab",
         width: number = 40,
         height: number = 23,
+        id?: number,
         callback?: () => void
     ) {
         // Create a transaction
@@ -141,25 +146,23 @@ export class SceneManager {
                 for (let i = 0; i < height; i++) {
                     layerData.data[i] = [];
                     for (let j = 0; j < width; j++) {
-                        layerData.data[i][j] = 32;
+                        layerData.data[i][j] = 0;
                     }
                 }
 
                 // Construct the scene data
                 const sceneData: SceneData = {
-                    id: newId,
+                    id: id != null ? id : newId,
                     name: sceneName,
                     layers: [layerData],
                 };
 
                 // Create the scene by id
-                table.add(sceneData);
-
-                // Update information
-                SceneManager.updateScenesInfo();
-
-                // Callback
-                if (callback) callback();
+                const addRequest = table.add(sceneData);
+                addRequest.onsuccess = () => {
+                    // Update information
+                    SceneManager.updateScenesInfo(callback);
+                };
             }
         };
     }
