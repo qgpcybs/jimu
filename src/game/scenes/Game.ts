@@ -37,8 +37,6 @@ export class Game extends Scene {
             const target = event.target as IDBOpenDBRequest;
             const database = target.result as SceneDatabase;
 
-            this.createFromDatabase(database);
-
             // const tilesPrimalPlateauProps = this.map.addTilesetImage(
             //     "tiles-primal_plateau-props"
             // ) as Phaser.Tilemaps.Tileset;
@@ -47,78 +45,38 @@ export class Game extends Scene {
             //     "Object Layer",
             //     tilesPrimalPlateauProps
             // ) as Phaser.Tilemaps.TilemapLayer;
+
+            // Get the first layer data
+            const layerData: LayerData = database.layers[0];
+
+            // Get the array of tiles data
+            const data: number[][] = layerData.data;
+
+            // Create the map
+            this.tilemap = this.make.tilemap({
+                data: data,
+                tileWidth: 32,
+                tileHeight: 32,
+            });
+
+            // Load tilesets
+            const tilesPrimalPlateauGrass = this.tilemap.addTilesetImage(
+                "tiles-primal_plateau-grass"
+            ) as Phaser.Tilemaps.Tileset;
+
+            const tilemapLayer = this.tilemap.createLayer(0, [
+                tilesPrimalPlateauGrass,
+            ]) as Phaser.Tilemaps.TilemapLayer;
+
+            this.layers[0] = this.add.layer();
+            this.layers[0].add(tilemapLayer);
+
+            // Complete
+            this.createCompleted();
         };
         getReq.onerror = () => {
             console.error("create scene error: getReq");
         };
-    }
-
-    /**
-     * Init a new scene
-     */
-    createNew() {
-        // Create the map
-        const mapTileSize: number = 32;
-        const mapWidth: number = 40;
-        const mapHeight: number = 23;
-        this.tilemap = this.make.tilemap({
-            tileWidth: mapTileSize,
-            tileHeight: mapTileSize,
-            width: mapWidth,
-            height: mapHeight,
-        });
-
-        // Load tilesets
-        const tilesPrimalPlateauGrass = this.tilemap.addTilesetImage(
-            "tiles-primal_plateau-grass"
-        ) as Phaser.Tilemaps.Tileset;
-
-        const tilemapLayer = this.tilemap.createBlankLayer("Ground Layer", [
-            tilesPrimalPlateauGrass,
-        ]) as Phaser.Tilemaps.TilemapLayer;
-
-        this.layers[0] = this.add.layer();
-        this.layers[0].add(tilemapLayer);
-
-        // Init with tile 0
-        tilemapLayer.fill(0, 0, 0, this.tilemap.width, this.tilemap.height);
-
-        // Complete
-        this.createCompleted();
-    }
-
-    /**
-     * Load an existed scene
-     * @param database scene's database
-     */
-    createFromDatabase(database: SceneDatabase) {
-        // Get the first layer data
-        const layerData: LayerData = database.layers[0];
-
-        // Get the array of tiles data
-        const data: number[][] = layerData.data;
-
-        // Create the map
-        this.tilemap = this.make.tilemap({
-            data: data,
-            tileWidth: 32,
-            tileHeight: 32,
-        });
-
-        // Load tilesets
-        const tilesPrimalPlateauGrass = this.tilemap.addTilesetImage(
-            "tiles-primal_plateau-grass"
-        ) as Phaser.Tilemaps.Tileset;
-
-        const tilemapLayer = this.tilemap.createLayer(0, [
-            tilesPrimalPlateauGrass,
-        ]) as Phaser.Tilemaps.TilemapLayer;
-
-        this.layers[0] = this.add.layer();
-        this.layers[0].add(tilemapLayer);
-
-        // Complete
-        this.createCompleted();
     }
 
     loadTilesets() {}
