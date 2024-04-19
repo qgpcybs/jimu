@@ -23,7 +23,7 @@ export interface SceneInfo {
 }
 
 export interface LayerInfo {
-    id: number | IDBValidKey;
+    id: number;
     name: string;
     type: string;
 }
