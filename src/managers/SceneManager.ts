@@ -1,4 +1,10 @@
-import { SceneInfo } from "../api/Scenes";
+import {
+    SceneDatabase,
+    SceneData,
+    LayerData,
+    SceneInfo,
+    LayerInfo,
+} from "../api/Scenes";
 import { DatabaseManager } from "./DatabaseManger";
 import { EventBus } from "../game/EventBus";
 export class SceneManager {
@@ -8,19 +14,29 @@ export class SceneManager {
     static TABLENAME = DatabaseManager.TABLENAME_SCENES;
 
     /**
-     * The brief infomation of scenes
+     * The brief information of scenes
      */
     static scenesInfo: SceneInfo[] = [];
 
     /**
-     * [Set] The brief infomation of scenes
+     * [Set] The brief information of scenes
      */
     static setScenesInfo: React.Dispatch<React.SetStateAction<SceneInfo[]>>;
 
     /**
-     * Update the brief infomation of scenes
+     * The brief information of scene layers
      */
-    static updateScenesInfo() {
+    static layersInfo: LayerInfo[] = [];
+
+    /**
+     * [Set] The brief information of scene layers
+     */
+    static setLayersInfo: React.Dispatch<React.SetStateAction<LayerInfo[]>>;
+
+    /**
+     * Update the brief information of scenes
+     */
+    static updateScenesInfo(callback?: () => void) {
         const trans = DatabaseManager.indexedDB.transaction(
             [SceneManager.TABLENAME],
             "readonly"
@@ -39,22 +55,58 @@ export class SceneManager {
                 item.continue();
             } else {
                 SceneManager.setScenesInfo(_scenesInfo);
-                EventBus.emit("editor-init-over");
+                // EventBus.emit("editor-init-over");
+
+                // Callback
+                if (callback) callback();
             }
+        };
+        openCursor.onerror = () => {
+            console.log("Error: updateScenesInfo");
+        };
+    }
+
+    /**
+     * Update the brief information of layers
+     * @param sceneId The id of the scene
+     */
+    static updateLayersInfo(sceneId: number) {
+        const _layersInfo: LayerInfo[] = [];
+        const getReq = SceneManager.loadScene(sceneId);
+        getReq.onsuccess = (event: Event) => {
+            const target = event.target as IDBOpenDBRequest;
+            const database = target.result as SceneDatabase;
+            if (database?.layers) {
+                const layerData = database.layers;
+                for (let i = 0; i < layerData.length; i++) {
+                    _layersInfo[i] = {
+                        id: layerData[i].id,
+                        name: layerData[i].name,
+                        type: layerData[i].type,
+                    };
+                }
+            }
+            SceneManager.setLayersInfo(_layersInfo);
+        };
+        getReq.onerror = () => {
+            console.log("Error: updateLayersInfo");
         };
     }
 
     /**
      * [Async] Create a new scene
      * The primary key is id
-     * @param tilemapName The name of scene
+     * @param sceneName The name of scene
      * @param width The width of scene
      * @param height The height of scene
+     * @param id The index of scene. If the id has been used, the operation is invalidated
      */
     static createScene(
-        tilemapName: string = "abab",
+        sceneName: string = "abab",
         width: number = 40,
-        height: number = 23
+        height: number = 23,
+        id?: number,
+        callback?: () => void
     ) {
         // Create a transaction
         const trans = DatabaseManager.indexedDB.transaction(
@@ -84,24 +136,33 @@ export class SceneManager {
                     }
                 }
 
-                // Construct the scene data
-                const sceneData = {
-                    id: newId,
-                    name: tilemapName,
+                // Construct the layer data
+                const layerData: LayerData = {
+                    id: 0,
+                    name: "New layer",
+                    type: "tilemap",
                     data: [] as number[][],
                 };
                 for (let i = 0; i < height; i++) {
-                    sceneData.data[i] = [];
+                    layerData.data[i] = [];
                     for (let j = 0; j < width; j++) {
-                        sceneData.data[i][j] = 32;
+                        layerData.data[i][j] = 0;
                     }
                 }
 
-                // Create the scene by id
-                table.add(sceneData);
+                // Construct the scene data
+                const sceneData: SceneData = {
+                    id: id != null ? id : newId,
+                    name: sceneName,
+                    layers: [layerData],
+                };
 
-                // Update infomation
-                SceneManager.updateScenesInfo();
+                // Create the scene by id
+                const addRequest = table.add(sceneData);
+                addRequest.onsuccess = () => {
+                    // Update information
+                    SceneManager.updateScenesInfo(callback);
+                };
             }
         };
     }
@@ -113,9 +174,10 @@ export class SceneManager {
     /**
      * Save the tilemap
      * @param id the id of the tilemap
+     * @param layerId
      * @param data the tileset data
      */
-    static saveTileMap(id: number, data: number[][]) {
+    static saveTileMap(id: number, layerId: number, data: number[][]) {
         // Create a transaction
         const trans = DatabaseManager.indexedDB.transaction(
             [SceneManager.TABLENAME],
@@ -123,9 +185,37 @@ export class SceneManager {
         );
         // Get the table
         const table = trans.objectStore(SceneManager.TABLENAME);
-        // Write the data
-        const putReq = table.put({ id: id, data: data });
-        putReq.onsuccess = () => {};
+
+        let sceneData: SceneData;
+        let layerData: LayerData;
+
+        // Get the previous database
+        const getReq = table.get(id);
+        getReq.onsuccess = (event: Event) => {
+            const target = event.target as IDBOpenDBRequest;
+            const preDatabase = target.result as SceneDatabase;
+
+            // Update database
+            if (preDatabase) {
+                sceneData = preDatabase;
+                layerData = sceneData.layers[layerId];
+            } else {
+                layerData = {
+                    id: layerId,
+                    name: "aaa",
+                    type: "tilemap",
+                    data: [],
+                };
+                console.log(111);
+                sceneData = { id: id, layers: [layerData] };
+            }
+            layerData.data = data;
+
+            // Write database
+            const putReq = table.put(sceneData);
+            // table.
+            // putReq.onsuccess = () => {};
+        };
     }
 
     /**
@@ -133,7 +223,7 @@ export class SceneManager {
      * @param id the id of the tilemap
      * @returns the tileset data
      */
-    static loadTilemap(id: number): IDBRequest {
+    static loadScene(id: number): IDBRequest {
         const trans = DatabaseManager.indexedDB.transaction(
             SceneManager.TABLENAME,
             "readonly"

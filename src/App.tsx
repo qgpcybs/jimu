@@ -14,7 +14,7 @@ import {
     ListItem,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
-import { SceneInfo } from "./api/Scenes";
+import { SceneInfo, LayerInfo } from "./api/Scenes";
 import { SceneManager } from "./managers/SceneManager";
 import { DatabaseManager } from "./managers/DatabaseManger";
 
@@ -22,30 +22,62 @@ import { DatabaseManager } from "./managers/DatabaseManger";
  * Entrance function
  */
 function App() {
-    // Init the Jimu Editor
-    const editorInit = () => {
-        // Open database
-        DatabaseManager.init(() => {
-            // Get scenes infomation
-            SceneManager.updateScenesInfo();
-        });
-    };
-
-    //  References to the PhaserGame component (game and scene are exposed)
+    //================================================================
+    // ■ Define
+    //================================================================
+    // References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
-    // Scenes Info
+    // Scenes information
     [SceneManager.scenesInfo, SceneManager.setScenesInfo] = useState<
         SceneInfo[]
     >([]);
 
-    // Event emitted from the PhaserGame component
+    // Current scene
     const [currentScene, setCurrentScene] = useState<Phaser.Scene>();
 
+    // Layers information
+    [SceneManager.layersInfo, SceneManager.setLayersInfo] = useState<
+        LayerInfo[]
+    >([]);
+
+    // Current layers
+    const [currentLayer, setCurrentLayer] =
+        useState<Phaser.GameObjects.Layer>();
+
+    //================================================================
+    // ■ Function
+    //================================================================
+    // Init the Jimu Editor
+    const editorInit = () => {
+        // Open database
+        DatabaseManager.init(() => {
+            // Get scenes information
+            SceneManager.updateScenesInfo(() => {
+                console.log(SceneManager.scenesInfo);
+                // Have any scenes been created?
+                if (SceneManager.scenesInfo.length < 1) {
+                    SceneManager.createScene("New Scene", 40, 23, 0, () => {
+                        EventBus.emit("editor-init-over");
+                    });
+                } else {
+                    EventBus.emit("editor-init-over");
+                }
+            });
+        });
+    };
+
+    // Switch scenes
     const currentSceneFunc = (_scene: Phaser.Scene) => {
         setCurrentScene(_scene);
     };
 
+    // Switch scene layers
+    const currentLayerFunc = (_layer: Phaser.GameObjects.Layer) => {
+        setCurrentLayer(_layer);
+    };
+
+    // Paint tiles
     const handleSelectTiles = (
         stX: number,
         stY: number,
@@ -55,11 +87,17 @@ function App() {
         EventBus.emit("paint-tiles", stX, stY, edX, edY);
     };
 
+    //================================================================
+    // ■ Init
+    //================================================================
     useEffect(() => {
         // Init Jimu
         editorInit();
     }, []);
 
+    //================================================================
+    // ■ Rendering
+    //================================================================
     return (
         <div id="app">
             <div id="topBar" className="h-24"></div>
@@ -75,9 +113,11 @@ function App() {
                         />
                     </div>
                 </div>
+
                 <div className="min-w-48 flex-col flex bg-white bg-opacity-75 z-[1]">
-                    <Accordion defaultIndex={[0]} allowMultiple>
-                        <AccordionItem>
+                    <Accordion defaultIndex={[0, 1]} allowMultiple>
+                        {/* Scenes list */}
+                        <AccordionItem id="scenesList">
                             <AccordionButton>
                                 <Box as="span" flex="1" textAlign="left">
                                     Scenes
@@ -109,6 +149,37 @@ function App() {
                                                 }}
                                             >
                                                 Scene1
+                                            </Button>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </AccordionPanel>
+                        </AccordionItem>
+                        {/* Objects list */}
+                        <AccordionItem id="objectsList">
+                            <AccordionButton>
+                                <Box as="span" textAlign="left" flex={1}>
+                                    Objects
+                                </Box>
+                                <AddIcon boxSize={3} marginRight={1}></AddIcon>
+                                <AccordionIcon marginLeft={1} />
+                            </AccordionButton>
+                            <AccordionPanel>
+                                <List spacing={2}>
+                                    {/* TODO */}
+                                    {SceneManager.layersInfo.map((_t, _i) => (
+                                        <ListItem key={_i}>
+                                            <Button
+                                                colorScheme="teal"
+                                                variant={"outline"}
+                                                onClick={() => {
+                                                    // TODO
+                                                }}
+                                            >
+                                                {
+                                                    SceneManager.layersInfo[_i]
+                                                        .name
+                                                }
                                             </Button>
                                         </ListItem>
                                     ))}

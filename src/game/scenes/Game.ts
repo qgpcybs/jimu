@@ -1,22 +1,22 @@
 import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
 import { SceneManager } from "../../managers/SceneManager";
-import { SceneDatabase, SimpleTile } from "../../api/Scenes";
+import { SceneDatabase, LayerData, SimpleTile } from "../../api/Scenes";
 
 export class Game extends Scene {
+    sceneId: number;
     camera: Phaser.Cameras.Scene2D.Camera;
+    layers: Phaser.GameObjects.Layer[];
+    tilemap: Phaser.Tilemaps.Tilemap;
     background: Phaser.GameObjects.Image;
     gameText: Phaser.GameObjects.Text;
-    map: Phaser.Tilemaps.Tilemap;
-    objectLayer: Phaser.Tilemaps.TilemapLayer;
-    groundLayer: Phaser.Tilemaps.TilemapLayer;
     controls: Phaser.Cameras.Controls.FixedKeyControl;
     preDrawTile: Phaser.Math.Vector2;
     preDrawTile2: Phaser.Math.Vector2 | null;
     selectedBox: Phaser.GameObjects.Graphics;
     oldDrawPointerTileXY: Phaser.Math.Vector2 | null;
     oldDrawTiles: SimpleTile[][];
-    sceneId: number;
+
     unDoing: boolean;
     isDrawAreaChanged: boolean;
 
@@ -24,18 +24,18 @@ export class Game extends Scene {
         super("Game");
     }
 
-    create(data = { id: 0 }) {
+    init(data = { id: 0 }) {
         this.sceneId = data.id;
+        this.layers = [];
+        SceneManager.updateLayersInfo(this.sceneId);
+    }
+
+    create() {
         // Getting from the database
-        const getReq = SceneManager.loadTilemap(this.sceneId);
+        const getReq = SceneManager.loadScene(this.sceneId);
         getReq.onsuccess = (event: Event) => {
             const target = event.target as IDBOpenDBRequest;
             const database = target.result as SceneDatabase;
-            if (database) {
-                this.createFromDatabase(database.data);
-            } else {
-                this.createNew();
-            }
 
             // const tilesPrimalPlateauProps = this.map.addTilesetImage(
             //     "tiles-primal_plateau-props"
@@ -45,66 +45,38 @@ export class Game extends Scene {
             //     "Object Layer",
             //     tilesPrimalPlateauProps
             // ) as Phaser.Tilemaps.TilemapLayer;
+
+            // Get the first layer data
+            const layerData: LayerData = database.layers[0];
+
+            // Get the array of tiles data
+            const data: number[][] = layerData.data;
+
+            // Create the map
+            this.tilemap = this.make.tilemap({
+                data: data,
+                tileWidth: 32,
+                tileHeight: 32,
+            });
+
+            // Load tilesets
+            const tilesPrimalPlateauGrass = this.tilemap.addTilesetImage(
+                "tiles-primal_plateau-grass"
+            ) as Phaser.Tilemaps.Tileset;
+
+            const tilemapLayer = this.tilemap.createLayer(0, [
+                tilesPrimalPlateauGrass,
+            ]) as Phaser.Tilemaps.TilemapLayer;
+
+            this.layers[0] = this.add.layer();
+            this.layers[0].add(tilemapLayer);
+
+            // Complete
+            this.createCompleted();
         };
         getReq.onerror = () => {
             console.error("create scene error: getReq");
         };
-    }
-
-    /**
-     * Init a new scene
-     */
-    createNew() {
-        // Create the map
-        const mapTileSize: number = 32;
-        const mapWidth: number = 40;
-        const mapHeight: number = 23;
-        this.map = this.make.tilemap({
-            tileWidth: mapTileSize,
-            tileHeight: mapTileSize,
-            width: mapWidth,
-            height: mapHeight,
-        });
-
-        // Load tilesets
-        const tilesPrimalPlateauGrass = this.map.addTilesetImage(
-            "tiles-primal_plateau-grass"
-        ) as Phaser.Tilemaps.Tileset;
-
-        this.groundLayer = this.map.createBlankLayer("Ground Layer", [
-            tilesPrimalPlateauGrass,
-        ]) as Phaser.Tilemaps.TilemapLayer;
-
-        // Init with tile 0
-        this.groundLayer.fill(0, 0, 0, this.map.width, this.map.height);
-
-        // Complete
-        this.createCompleted();
-    }
-
-    /**
-     * Load an existed scene
-     * @param data An array of tiles data
-     */
-    createFromDatabase(data: number[][]) {
-        // Create the map
-        this.map = this.make.tilemap({
-            data: data,
-            tileWidth: 32,
-            tileHeight: 32,
-        });
-
-        // Load tilesets
-        const tilesPrimalPlateauGrass = this.map.addTilesetImage(
-            "tiles-primal_plateau-grass"
-        ) as Phaser.Tilemaps.Tileset;
-
-        this.groundLayer = this.map.createLayer(0, [
-            tilesPrimalPlateauGrass,
-        ]) as Phaser.Tilemaps.TilemapLayer;
-
-        // Complete
-        this.createCompleted();
     }
 
     loadTilesets() {}
@@ -119,8 +91,8 @@ export class Game extends Scene {
         this.selectedBox.strokeRect(
             0,
             0,
-            this.map.tileWidth,
-            this.map.tileHeight
+            this.tilemap.tileWidth,
+            this.tilemap.tileHeight
         );
 
         // Init drawing states
@@ -140,20 +112,22 @@ export class Game extends Scene {
      */
     update(): void {
         // The map has been loaded or created
-        if (!this.map || this.map.layers.length < 1) return;
+        if (!this.tilemap || this.tilemap.layers.length < 1) return;
+
+        // console.log(this.children)
 
         // Update cursor position (e.g. tile selected box)
         const worldPoint = this.input.activePointer.positionToCamera(
             this.cameras.main
         ) as Phaser.Math.Vector2;
 
-        const pointerTileXY = this.map.worldToTileXY(
+        const pointerTileXY = this.tilemap.worldToTileXY(
             worldPoint.x,
             worldPoint.y
         );
 
         const pointerWorldXY = pointerTileXY
-            ? this.map.tileToWorldXY(pointerTileXY.x, pointerTileXY.y)
+            ? this.tilemap.tileToWorldXY(pointerTileXY.x, pointerTileXY.y)
             : new Phaser.Math.Vector2(0, 0);
 
         const deltaMoveXY = this.input.manager.activePointer.velocity;
@@ -206,6 +180,7 @@ export class Game extends Scene {
             if (event.ctrlKey) {
                 if (event.shiftKey) {
                     // Common Action: Redo
+                    // TODO
                     console.log("Redo");
                 } else {
                     // Common Action: Undo
@@ -237,8 +212,8 @@ export class Game extends Scene {
                 return;
             // Don't draw over tilemap
             if (
-                pointerTileXY.x > this.map.width ||
-                pointerTileXY.y > this.map.height ||
+                pointerTileXY.x > this.tilemap.width ||
+                pointerTileXY.y > this.tilemap.height ||
                 pointerTileXY.x < 0 ||
                 pointerTileXY.y < 0
             )
@@ -247,8 +222,10 @@ export class Game extends Scene {
             if (this.unDoing) return;
 
             // Get tileset's size
-            const tilesetColumns = this.groundLayer.tileset[0].columns;
-            const tilesetRows = this.groundLayer.tileset[0].rows;
+            const tilemapLayer =
+                this.layers[0].getChildren()[0] as Phaser.Tilemaps.TilemapLayer;
+            const tilesetColumns = tilemapLayer.tileset[0].columns;
+            const tilesetRows = tilemapLayer.tileset[0].rows;
 
             // Update old pointer
             this.oldDrawPointerTileXY = pointerTileXY;
@@ -291,8 +268,8 @@ export class Game extends Scene {
                             const pastDrawY =
                                 pointerTileXY.y + i - this.preDrawTile.y;
                             if (
-                                pastDrawX < this.map.width &&
-                                pastDrawY < this.map.height
+                                pastDrawX < this.tilemap.width &&
+                                pastDrawY < this.tilemap.height
                             ) {
                                 // Position must inside the map
                                 console.log(
@@ -306,16 +283,16 @@ export class Game extends Scene {
                                 this.oldDrawTiles[oldDrawTilesTime].push({
                                     x: pastDrawX,
                                     y: pastDrawY,
-                                    index: this.groundLayer.layer.data[
-                                        pastDrawY
-                                    ][pastDrawX].index,
+                                    index: tilemapLayer.layer.data[pastDrawY][
+                                        pastDrawX
+                                    ].index,
                                 });
                             }
                         }
                     }
                 }
                 // Draw the area
-                this.groundLayer.putTilesAt(
+                tilemapLayer.putTilesAt(
                     finDrawTilesIndex,
                     pointerTileXY.x,
                     pointerTileXY.y
@@ -333,12 +310,12 @@ export class Game extends Scene {
                     this.oldDrawTiles[oldDrawTilesTime].push({
                         x: pointerTileXY.x,
                         y: pointerTileXY.y,
-                        index: this.groundLayer.layer.data[pointerTileXY.y][
+                        index: tilemapLayer.layer.data[pointerTileXY.y][
                             pointerTileXY.x
                         ].index,
                     });
                     // Draw the tile
-                    this.groundLayer.putTileAt(
+                    tilemapLayer.putTileAt(
                         finDrawTileIndex,
                         pointerTileXY.x,
                         pointerTileXY.y
@@ -347,7 +324,7 @@ export class Game extends Scene {
             }
 
             // Save to the database
-            const output = this.groundLayer.layer.data;
+            const output = tilemapLayer.layer.data;
             const input: number[][] = [];
             for (let i = 0; i < output.length; i++) {
                 input[i] = [];
@@ -355,7 +332,7 @@ export class Game extends Scene {
                     input[i][j] = output[i][j].index;
                 }
             }
-            SceneManager.saveTileMap(this.sceneId, input);
+            SceneManager.saveTileMap(this.sceneId, 0, input);
         }
     }
 
@@ -366,7 +343,9 @@ export class Game extends Scene {
         if (currentOldDrawTiles) {
             for (let i = 0; i < currentOldDrawTiles.length; i++) {
                 console.log(currentOldDrawTiles[i]);
-                this.groundLayer.putTileAt(
+                const tilemapLayer =
+                    this.layers[0].getChildren()[0] as Phaser.Tilemaps.TilemapLayer;
+                tilemapLayer.putTileAt(
                     currentOldDrawTiles[i].index,
                     currentOldDrawTiles[i].x,
                     currentOldDrawTiles[i].y
