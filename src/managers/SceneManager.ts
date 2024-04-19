@@ -62,7 +62,7 @@ export class SceneManager {
             }
         };
         openCursor.onerror = () => {
-            console.log("Error: updateScenesInfo");
+            console.error("Error: updateScenesInfo");
         };
     }
 
@@ -89,7 +89,7 @@ export class SceneManager {
             SceneManager.setLayersInfo(_layersInfo);
         };
         getReq.onerror = () => {
-            console.log("Error: updateLayersInfo");
+            console.error("Error: updateLayersInfo");
         };
     }
 
@@ -167,17 +167,26 @@ export class SceneManager {
         };
     }
 
-    static getScenesNumber(): number {
-        return 1;
-    }
+    // static getScenesNumber(): number {
+    //     return 1;
+    // }
 
     /**
      * Save the tilemap
      * @param id the id of the tilemap
      * @param layerId
-     * @param data the tileset data
+     * @param _data the tileset data
      */
-    static saveTileMap(id: number, layerId: number, data: number[][]) {
+    static saveTileMap(id: number, layerId: number, _data: Phaser.Tilemaps.Tile[][]) {
+        // Get data
+        const data:number[][] = [];
+        for (let i = 0; i < _data.length; i++) {
+            data[i] = [];
+            for (let j = 0; j < _data[i].length; j++) {
+                data[i][j] = _data[i][j].index;
+            }
+        }
+
         // Create a transaction
         const trans = DatabaseManager.indexedDB.transaction(
             [SceneManager.TABLENAME],
@@ -206,7 +215,6 @@ export class SceneManager {
                     type: "tilemap",
                     data: [],
                 };
-                console.log(111);
                 sceneData = { id: id, layers: [layerData] };
             }
             layerData.data = data;

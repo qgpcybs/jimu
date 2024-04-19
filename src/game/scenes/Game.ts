@@ -324,15 +324,7 @@ export class Game extends Scene {
             }
 
             // Save to the database
-            const output = tilemapLayer.layer.data;
-            const input: number[][] = [];
-            for (let i = 0; i < output.length; i++) {
-                input[i] = [];
-                for (let j = 0; j < output[i].length; j++) {
-                    input[i][j] = output[i][j].index;
-                }
-            }
-            SceneManager.saveTileMap(this.sceneId, 0, input);
+            SceneManager.saveTileMap(this.sceneId, 0, tilemapLayer.layer.data);
         }
     }
 
@@ -340,11 +332,10 @@ export class Game extends Scene {
         if (this.unDoing) return;
         this.unDoing = true;
         const currentOldDrawTiles = this.oldDrawTiles.pop();
+        const tilemapLayer =
+            this.layers[0].getChildren()[0] as Phaser.Tilemaps.TilemapLayer;
         if (currentOldDrawTiles) {
             for (let i = 0; i < currentOldDrawTiles.length; i++) {
-                console.log(currentOldDrawTiles[i]);
-                const tilemapLayer =
-                    this.layers[0].getChildren()[0] as Phaser.Tilemaps.TilemapLayer;
                 tilemapLayer.putTileAt(
                     currentOldDrawTiles[i].index,
                     currentOldDrawTiles[i].x,
@@ -352,6 +343,8 @@ export class Game extends Scene {
                 );
             }
         }
+        // Save to the database
+        SceneManager.saveTileMap(this.sceneId, 0, tilemapLayer.layer.data);
         this.unDoing = false;
     }
 }

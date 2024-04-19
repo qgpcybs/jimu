@@ -41,9 +41,12 @@ function App() {
         LayerInfo[]
     >([]);
 
-    // Current layers
+    // Current layer
     const [currentLayer, setCurrentLayer] =
         useState<Phaser.GameObjects.Layer>();
+
+    // Current Object
+    // TODO
 
     //================================================================
     // ■ Function
@@ -54,7 +57,6 @@ function App() {
         DatabaseManager.init(() => {
             // Get scenes information
             SceneManager.updateScenesInfo(() => {
-                console.log(SceneManager.scenesInfo);
                 // Have any scenes been created?
                 if (SceneManager.scenesInfo.length < 1) {
                     SceneManager.createScene("New Scene", 40, 23, 0, () => {
