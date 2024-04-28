@@ -15,6 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { SceneInfo, LayerInfo } from "./api/Scenes";
+import { EditorState } from "./EditorState";
 import { SceneManager } from "./managers/SceneManager";
 import { DatabaseManager } from "./managers/DatabaseManger";
 
@@ -41,9 +42,12 @@ function App() {
         LayerInfo[]
     >([]);
 
-    // Current layers
-    const [currentLayer, setCurrentLayer] =
-        useState<Phaser.GameObjects.Layer>();
+    // Current layer ID
+    [EditorState.currentLayerId, EditorState.setCurrentLayerId] =
+        useState<number>();
+
+    // Current Object
+    // TODO
 
     //================================================================
     // ■ Function
@@ -54,7 +58,6 @@ function App() {
         DatabaseManager.init(() => {
             // Get scenes information
             SceneManager.updateScenesInfo(() => {
-                console.log(SceneManager.scenesInfo);
                 // Have any scenes been created?
                 if (SceneManager.scenesInfo.length < 1) {
                     SceneManager.createScene("New Scene", 40, 23, 0, () => {
@@ -67,15 +70,15 @@ function App() {
         });
     };
 
-    // Switch scenes
+    // Switch scenes (Temp)
     const currentSceneFunc = (_scene: Phaser.Scene) => {
         setCurrentScene(_scene);
     };
 
-    // Switch scene layers
-    const currentLayerFunc = (_layer: Phaser.GameObjects.Layer) => {
-        setCurrentLayer(_layer);
-    };
+    // // Switch scene layers
+    // const currentLayerFunc = (_layer: Phaser.GameObjects.Layer) => {
+    //     setCurrentLayer(_layer);
+    // };
 
     // Paint tiles
     const handleSelectTiles = (
@@ -161,7 +164,14 @@ function App() {
                                 <Box as="span" textAlign="left" flex={1}>
                                     Objects
                                 </Box>
-                                <AddIcon boxSize={3} marginRight={1}></AddIcon>
+                                <AddIcon
+                                    boxSize={3}
+                                    marginRight={1}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        // TODO
+                                    }}
+                                ></AddIcon>
                                 <AccordionIcon marginLeft={1} />
                             </AccordionButton>
                             <AccordionPanel>
@@ -173,7 +183,9 @@ function App() {
                                                 colorScheme="teal"
                                                 variant={"outline"}
                                                 onClick={() => {
-                                                    // TODO
+                                                    EditorState.setCurrentLayerId(
+                                                        _t.id
+                                                    );
                                                 }}
                                             >
                                                 {
