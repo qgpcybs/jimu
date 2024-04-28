@@ -1,12 +1,14 @@
 import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
 import { SceneManager } from "../../managers/SceneManager";
+import { EditorState } from "../../EditorState";
 import { SceneDatabase, LayerData, SimpleTile } from "../../api/Scenes";
 
 export class Game extends Scene {
     sceneId: number;
     camera: Phaser.Cameras.Scene2D.Camera;
-    layers: Phaser.GameObjects.Layer[];
+    // layers: Phaser.GameObjects.Layer[];
+    layers: Phaser.Tilemaps.TilemapLayer[];
     tilemap: Phaser.Tilemaps.Tilemap;
     background: Phaser.GameObjects.Image;
     gameText: Phaser.GameObjects.Text;
@@ -15,7 +17,7 @@ export class Game extends Scene {
     preDrawTile2: Phaser.Math.Vector2 | null;
     selectedBox: Phaser.GameObjects.Graphics;
     oldDrawPointerTileXY: Phaser.Math.Vector2 | null;
-    oldDrawTiles: SimpleTile[][];
+    oldDrawTiles: SimpleTile[][][];
 
     unDoing: boolean;
     isDrawAreaChanged: boolean;
@@ -27,6 +29,7 @@ export class Game extends Scene {
     init(data = { id: 0 }) {
         this.sceneId = data.id;
         this.layers = [];
+        this.oldDrawTiles = [];
         SceneManager.updateLayersInfo(this.sceneId);
     }
 
@@ -48,26 +51,30 @@ export class Game extends Scene {
                 const data: number[][] = objectData.data;
 
                 // Create the map
-                this.tilemap = this.make.tilemap({
-                    data: data,
+                const tilemap = (this.tilemap = this.make.tilemap({
                     tileWidth: 32,
                     tileHeight: 32,
-                });
+                    data: data,
+                }));
 
                 // Load tilesets
-                const tilesPrimalPlateauGrass = this.tilemap.addTilesetImage(
+                const tilesPrimalPlateauGrass = tilemap.addTilesetImage(
                     "tiles-primal_plateau-grass"
                 ) as Phaser.Tilemaps.Tileset;
 
-                const tilemapLayer = this.tilemap.createLayer(objectData.id, [
+                const tilemapLayer = tilemap.createLayer(0, [
                     tilesPrimalPlateauGrass,
                 ]) as Phaser.Tilemaps.TilemapLayer;
 
+                const index = this.layers.length;
+                this.layers[index] = tilemapLayer;
                 tilemapLayer.setDepth(objectData.depth);
 
-                const index = this.layers.length;
-                this.layers[index] = this.add.layer();
-                this.layers[index].add(tilemapLayer);
+                // this.layers[index] = this.add.layer();
+                // this.layers[index].add(tilemapLayer);
+
+                // Init drawing record list
+                this.oldDrawTiles[objectData.id] = [];
             }
             // Complete
             this.createCompleted();
@@ -102,9 +109,6 @@ export class Game extends Scene {
         // Init drawing states
         this.isDrawAreaChanged = false;
         this.unDoing = false;
-
-        // Init drawing record list
-        this.oldDrawTiles = [];
 
         // Emit & listen event
         EventBus.emit("current-scene-ready", this);
@@ -226,8 +230,8 @@ export class Game extends Scene {
             if (this.unDoing) return;
 
             // Get tileset's size
-            const tilemapLayer =
-                this.layers[0].getChildren()[0] as Phaser.Tilemaps.TilemapLayer;
+            const currentLayerId = EditorState.currentLayerId;
+            const tilemapLayer = this.layers[currentLayerId];
             const tilesetColumns = tilemapLayer.tileset[0].columns;
             const tilesetRows = tilemapLayer.tileset[0].rows;
 
@@ -238,7 +242,7 @@ export class Game extends Scene {
             this.isDrawAreaChanged = false;
 
             // Each time save one action of drawing old tiles
-            const oldDrawTilesTime = this.oldDrawTiles.length;
+            const oldDrawTilesTime = this.oldDrawTiles[currentLayerId].length;
             if (this.preDrawTile2) {
                 // The 2st tile means to draw an area
                 const finDrawTilesIndex: number[][] = [];
@@ -277,14 +281,21 @@ export class Game extends Scene {
                             ) {
                                 // Position must inside the map
                                 console.log(
-                                    this.oldDrawTiles[oldDrawTilesTime]
+                                    this.oldDrawTiles[currentLayerId][
+                                        oldDrawTilesTime
+                                    ]
                                 );
                                 if (
-                                    this.oldDrawTiles[oldDrawTilesTime] ===
-                                    undefined
+                                    this.oldDrawTiles[currentLayerId][
+                                        oldDrawTilesTime
+                                    ] === undefined
                                 )
-                                    this.oldDrawTiles[oldDrawTilesTime] = [];
-                                this.oldDrawTiles[oldDrawTilesTime].push({
+                                    this.oldDrawTiles[currentLayerId][
+                                        oldDrawTilesTime
+                                    ] = [];
+                                this.oldDrawTiles[currentLayerId][
+                                    oldDrawTilesTime
+                                ].push({
                                     x: pastDrawX,
                                     y: pastDrawY,
                                     index: tilemapLayer.layer.data[pastDrawY][
@@ -310,8 +321,8 @@ export class Game extends Scene {
                     finDrawTileIndex < tilesetColumns * tilesetRows
                 ) {
                     // Add to the record of past drawing
-                    this.oldDrawTiles[oldDrawTilesTime] = [];
-                    this.oldDrawTiles[oldDrawTilesTime].push({
+                    this.oldDrawTiles[currentLayerId][oldDrawTilesTime] = [];
+                    this.oldDrawTiles[currentLayerId][oldDrawTilesTime].push({
                         x: pointerTileXY.x,
                         y: pointerTileXY.y,
                         index: tilemapLayer.layer.data[pointerTileXY.y][
@@ -328,16 +339,24 @@ export class Game extends Scene {
             }
 
             // Save to the database
-            SceneManager.saveTileMap(this.sceneId, 0, tilemapLayer.layer.data);
+            SceneManager.saveTileMap(
+                this.sceneId,
+                currentLayerId,
+                tilemapLayer.layer.data
+            );
         }
     }
 
     undoLastDraw() {
         if (this.unDoing) return;
         this.unDoing = true;
-        const currentOldDrawTiles = this.oldDrawTiles.pop();
-        const tilemapLayer =
-            this.layers[0].getChildren()[0] as Phaser.Tilemaps.TilemapLayer;
+
+        const currentLayerId = EditorState.currentLayerId;
+
+        const currentOldDrawTiles = this.oldDrawTiles[currentLayerId].pop();
+
+        const tilemapLayer = this.layers[currentLayerId];
+
         if (currentOldDrawTiles) {
             for (let i = 0; i < currentOldDrawTiles.length; i++) {
                 tilemapLayer.putTileAt(
