@@ -1,12 +1,16 @@
 export interface SceneDatabase extends IDBDatabase {
     id: number;
     name: string;
+    width: number;
+    height: number;
     objects: ObejctData[];
 }
 
 export interface SceneData {
     id: number;
     name: string;
+    width: number;
+    height: number;
     objects: ObejctData[];
 }
 
@@ -38,4 +42,8 @@ export interface SimpleTile {
     x: number;
     y: number;
     index: number;
+}
+
+export interface PaintHistory extends SimpleTile {
+    layerId: number;
 }

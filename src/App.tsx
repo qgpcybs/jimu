@@ -37,6 +37,10 @@ function App() {
     // Current scene
     const [currentScene, setCurrentScene] = useState<Phaser.Scene>();
 
+    // Current sceneId
+    [EditorState.currentSceneId, EditorState.setCurrentSceneId] =
+        useState<number>(0);
+
     // Layers information
     [SceneManager.layersInfo, SceneManager.setLayersInfo] = useState<
         LayerInfo[]
@@ -44,7 +48,7 @@ function App() {
 
     // Current layer ID
     [EditorState.currentLayerId, EditorState.setCurrentLayerId] =
-        useState<number>();
+        useState<number>(0);
 
     // Current Object
     // TODO
@@ -143,6 +147,9 @@ function App() {
                                                 colorScheme="teal"
                                                 variant="outline"
                                                 onClick={() => {
+                                                    EditorState.setCurrentSceneId(
+                                                        Number(_t.id)
+                                                    );
                                                     currentScene?.scene.start(
                                                         "Game",
                                                         {
@@ -169,7 +176,19 @@ function App() {
                                     marginRight={1}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        // TODO
+                                        if (EditorState.currentSceneId != null)
+                                            SceneManager.createLayer(
+                                                EditorState.currentSceneId,
+                                                undefined,
+                                                () => {
+                                                    currentScene?.scene.start(
+                                                        "Game",
+                                                        {
+                                                            id: EditorState.currentSceneId,
+                                                        }
+                                                    );
+                                                }
+                                            );
                                     }}
                                 ></AddIcon>
                                 <AccordionIcon marginLeft={1} />

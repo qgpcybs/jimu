@@ -155,6 +155,8 @@ export class SceneManager {
                 const sceneData: SceneData = {
                     id: id != null ? id : newId,
                     name: sceneName,
+                    width: width,
+                    height: height,
                     objects: [layerData],
                 };
 
@@ -207,11 +209,11 @@ export class SceneManager {
         const getReq = table.get(id);
         getReq.onsuccess = (event: Event) => {
             const target = event.target as IDBOpenDBRequest;
-            const preDatabase = target.result as SceneDatabase;
+            const preSceneDatabase = target.result as SceneDatabase;
 
             // Update database
-            if (preDatabase) {
-                sceneData = preDatabase;
+            if (preSceneDatabase) {
+                sceneData = preSceneDatabase;
                 const objects = sceneData.objects;
                 for (let i = 0; i < objects.length; i++) {
                     if (objects[i].id == layerId) {
@@ -230,6 +232,8 @@ export class SceneManager {
                 sceneData = {
                     id: id,
                     name: sceneData.name,
+                    width: sceneData.width,
+                    height: sceneData.height,
                     objects: [layerData],
                 };
             }
@@ -265,5 +269,73 @@ export class SceneManager {
 
     static enableStoreLocally(): IDBFactory {
         return window.indexedDB;
+    }
+
+    static createLayer(
+        sceneId: number,
+        layerName?: string | undefined,
+        callback?: () => void
+    ) {
+        // Create a transaction
+        const trans = DatabaseManager.indexedDB.transaction(
+            [SceneManager.TABLENAME],
+            "readwrite"
+        );
+
+        // Get the table
+        const table = trans.objectStore(SceneManager.TABLENAME);
+        const getReq = table.get(sceneId);
+        getReq.onsuccess = (event: Event) => {
+            const target = event.target as IDBOpenDBRequest;
+            const preSceneDatabase = target.result as SceneDatabase;
+
+            // Get the new id
+            let layerId: number = 0;
+            let layerDepth: number = 0;
+            if (preSceneDatabase) {
+                for (let i = 0; i < preSceneDatabase.objects.length; i++) {
+                    const object = preSceneDatabase.objects[i];
+                    if (object.id > layerId) layerId = object.id;
+                    if (object.depth > layerDepth) layerDepth = object.depth;
+                }
+            }
+            layerId++;
+            layerDepth++;
+
+            // Construct the layer data
+            const layerData: LayerData = {
+                id: layerId,
+                name: layerName ? layerName : "New layer",
+                type: "layer",
+                subType: "tilemap",
+                depth: layerDepth,
+                data: [],
+            };
+
+            const width = preSceneDatabase.width;
+            const height = preSceneDatabase.height;
+            for (let i = 0; i < height; i++) {
+                layerData.data[i] = [];
+                for (let j = 0; j < width; j++) {
+                    layerData.data[i][j] = 225;
+                }
+            }
+
+            // Add to scene data
+            const sceneData = {
+                id: sceneId,
+                name: preSceneDatabase.name,
+                width: width,
+                height: height,
+                objects: preSceneDatabase.objects.concat(layerData),
+            };
+
+            // Write database
+            const putReq = table.put(sceneData);
+            putReq.onsuccess = () => {
+                SceneManager.updateLayersInfo(sceneId);
+                if (callback) callback();
+            };
+        };
     }
 }

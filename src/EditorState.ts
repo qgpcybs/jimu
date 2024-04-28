@@ -1,13 +1,23 @@
 export class EditorState {
     /**
+     * Current scene ID
+     */
+    static currentSceneId: number;
+
+    /**
+     * [Set] Current scene ID
+     */
+    static setCurrentSceneId: React.Dispatch<
+        React.SetStateAction<number>
+    >;
+
+    /**
      * Current layer ID
      */
-    static currentLayerId: number | undefined;
+    static currentLayerId: number;
 
     /**
      * [Set] Current layer ID
      */
-    static setCurrentLayerId: React.Dispatch<
-        React.SetStateAction<number | undefined>
-    >;
+    static setCurrentLayerId: React.Dispatch<React.SetStateAction<number>>;
 }
