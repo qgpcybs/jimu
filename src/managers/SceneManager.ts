@@ -72,25 +72,24 @@ export class SceneManager {
      */
     static updateLayersInfo(sceneId: number) {
         const _layersInfo: LayerInfo[] = [];
-        const getReq = SceneManager.loadScene(sceneId);
-        getReq.onsuccess = (event: Event) => {
-            const target = event.target as IDBOpenDBRequest;
-            const database = target.result as SceneDatabase;
-            if (database?.layers) {
-                const layerData = database.layers;
-                for (let i = 0; i < layerData.length; i++) {
+        SceneManager.loadScene(sceneId, (database: SceneDatabase) => {
+            if (database?.objects) {
+                const objectDatas = database.objects as LayerData[];
+                for (let i = 0; i < objectDatas.length; i++) {
+                    if (
+                        objectDatas[i].type != "layer" ||
+                        objectDatas[i].subType != "tilemap"
+                    )
+                        continue;
                     _layersInfo[i] = {
-                        id: layerData[i].id,
-                        name: layerData[i].name,
-                        type: layerData[i].type,
+                        id: objectDatas[i].id,
+                        name: objectDatas[i].name,
+                        type: objectDatas[i].type,
                     };
                 }
             }
             SceneManager.setLayersInfo(_layersInfo);
-        };
-        getReq.onerror = () => {
-            console.error("Error: updateLayersInfo");
-        };
+        });
     }
 
     /**
@@ -140,7 +139,9 @@ export class SceneManager {
                 const layerData: LayerData = {
                     id: 0,
                     name: "New layer",
-                    type: "tilemap",
+                    type: "layer",
+                    subType: "tilemap",
+                    depth: 0,
                     data: [] as number[][],
                 };
                 for (let i = 0; i < height; i++) {
@@ -154,7 +155,7 @@ export class SceneManager {
                 const sceneData: SceneData = {
                     id: id != null ? id : newId,
                     name: sceneName,
-                    layers: [layerData],
+                    objects: [layerData],
                 };
 
                 // Create the scene by id
@@ -177,9 +178,13 @@ export class SceneManager {
      * @param layerId
      * @param _data the tileset data
      */
-    static saveTileMap(id: number, layerId: number, _data: Phaser.Tilemaps.Tile[][]) {
+    static saveTileMap(
+        id: number,
+        layerId: number,
+        _data: Phaser.Tilemaps.Tile[][]
+    ) {
         // Get data
-        const data:number[][] = [];
+        const data: number[][] = [];
         for (let i = 0; i < _data.length; i++) {
             data[i] = [];
             for (let j = 0; j < _data[i].length; j++) {
@@ -207,15 +212,26 @@ export class SceneManager {
             // Update database
             if (preDatabase) {
                 sceneData = preDatabase;
-                layerData = sceneData.layers[layerId];
+                const objects = sceneData.objects;
+                for (let i = 0; i < objects.length; i++) {
+                    if (objects[i].id == layerId) {
+                        layerData = objects[i] as LayerData;
+                    }
+                }
             } else {
                 layerData = {
                     id: layerId,
-                    name: "aaa",
-                    type: "tilemap",
+                    name: "New layer",
+                    type: "layer",
+                    subType: "tilemap",
+                    depth: 0,
                     data: [],
                 };
-                sceneData = { id: id, layers: [layerData] };
+                sceneData = {
+                    id: id,
+                    name: sceneData.name,
+                    objects: [layerData],
+                };
             }
             layerData.data = data;
 
@@ -229,15 +245,22 @@ export class SceneManager {
     /**
      * Load the tilemap
      * @param id the id of the tilemap
-     * @returns the tileset data
      */
-    static loadScene(id: number): IDBRequest {
+    static loadScene(id: number, callback: (_database: SceneDatabase) => void) {
         const trans = DatabaseManager.indexedDB.transaction(
             SceneManager.TABLENAME,
             "readonly"
         );
         const store = trans.objectStore(SceneManager.TABLENAME);
-        return store.get(id);
+        const getReq = store.get(id);
+        getReq.onsuccess = (event: Event) => {
+            const target = event.target as IDBOpenDBRequest;
+            const database = target.result as SceneDatabase;
+            callback(database);
+        };
+        getReq.onerror = () => {
+            console.error("Load scene error");
+        };
     }
 
     static enableStoreLocally(): IDBFactory {

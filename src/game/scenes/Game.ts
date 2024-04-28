@@ -32,51 +32,55 @@ export class Game extends Scene {
 
     create() {
         // Getting from the database
-        const getReq = SceneManager.loadScene(this.sceneId);
-        getReq.onsuccess = (event: Event) => {
-            const target = event.target as IDBOpenDBRequest;
-            const database = target.result as SceneDatabase;
+        SceneManager.loadScene(this.sceneId, (database: SceneDatabase) => {
+            // Get layers data
+            for (let i = 0; i < database.objects.length; i++) {
+                const objectData = database.objects[i] as LayerData;
 
-            // const tilesPrimalPlateauProps = this.map.addTilesetImage(
-            //     "tiles-primal_plateau-props"
-            // ) as Phaser.Tilemaps.Tileset;
+                // Only load tilemap
+                if (
+                    objectData.type != "layer" ||
+                    objectData.subType != "tilemap"
+                )
+                    continue;
 
-            // this.objectLayer = this.map.createBlankLayer(
-            //     "Object Layer",
-            //     tilesPrimalPlateauProps
-            // ) as Phaser.Tilemaps.TilemapLayer;
+                // Get the array of tiles data
+                const data: number[][] = objectData.data;
 
-            // Get the first layer data
-            const layerData: LayerData = database.layers[0];
+                // Create the map
+                this.tilemap = this.make.tilemap({
+                    data: data,
+                    tileWidth: 32,
+                    tileHeight: 32,
+                });
 
-            // Get the array of tiles data
-            const data: number[][] = layerData.data;
+                // Load tilesets
+                const tilesPrimalPlateauGrass = this.tilemap.addTilesetImage(
+                    "tiles-primal_plateau-grass"
+                ) as Phaser.Tilemaps.Tileset;
 
-            // Create the map
-            this.tilemap = this.make.tilemap({
-                data: data,
-                tileWidth: 32,
-                tileHeight: 32,
-            });
+                const tilemapLayer = this.tilemap.createLayer(objectData.id, [
+                    tilesPrimalPlateauGrass,
+                ]) as Phaser.Tilemaps.TilemapLayer;
 
-            // Load tilesets
-            const tilesPrimalPlateauGrass = this.tilemap.addTilesetImage(
-                "tiles-primal_plateau-grass"
-            ) as Phaser.Tilemaps.Tileset;
+                tilemapLayer.setDepth(objectData.depth);
 
-            const tilemapLayer = this.tilemap.createLayer(0, [
-                tilesPrimalPlateauGrass,
-            ]) as Phaser.Tilemaps.TilemapLayer;
-
-            this.layers[0] = this.add.layer();
-            this.layers[0].add(tilemapLayer);
-
+                const index = this.layers.length;
+                this.layers[index] = this.add.layer();
+                this.layers[index].add(tilemapLayer);
+            }
             // Complete
             this.createCompleted();
-        };
-        getReq.onerror = () => {
-            console.error("create scene error: getReq");
-        };
+        });
+
+        // const tilesPrimalPlateauProps = this.map.addTilesetImage(
+        //     "tiles-primal_plateau-props"
+        // ) as Phaser.Tilemaps.Tileset;
+
+        // this.objectLayer = this.map.createBlankLayer(
+        //     "Object Layer",
+        //     tilesPrimalPlateauProps
+        // ) as Phaser.Tilemaps.TilemapLayer;
     }
 
     loadTilesets() {}
