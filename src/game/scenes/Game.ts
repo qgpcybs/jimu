@@ -98,6 +98,7 @@ export class Game extends Scene {
     createCompleted() {
         // Init the selected box
         this.selectedBox = this.add.graphics();
+        this.selectedBox.setDepth(9999);
         this.selectedBox.lineStyle(2, 0xffffff, 0.8);
         this.selectedBox.strokeRect(
             0,

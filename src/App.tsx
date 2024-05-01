@@ -12,6 +12,12 @@ import {
     Button,
     List,
     ListItem,
+    Radio,
+    RadioGroup,
+    Stack,
+    Tabs,
+    TabList,
+    Tab,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import { SceneInfo, LayerInfo } from "./api/Scenes";
@@ -107,7 +113,7 @@ function App() {
     //================================================================
     return (
         <div id="app">
-            <div id="topBar" className="h-24"></div>
+            <div id="topBar" className="h-12"></div>
             <div
                 id="mainContent"
                 className="flex flex-row w-screen bg-white h-[calc(100vh-6rem)]"
@@ -140,36 +146,56 @@ function App() {
                                 <AccordionIcon marginLeft={1} />
                             </AccordionButton>
                             <AccordionPanel>
-                                <List spacing={2}>
-                                    {SceneManager.scenesInfo.map((_t, _i) => (
-                                        <ListItem key={_i}>
-                                            <Button
-                                                colorScheme="teal"
-                                                variant="outline"
-                                                onClick={() => {
-                                                    EditorState.setCurrentSceneId(
-                                                        Number(_t.id)
-                                                    );
-                                                    currentScene?.scene.start(
-                                                        "Game",
-                                                        {
-                                                            id: _i,
+                                <Tabs
+                                    defaultIndex={EditorState.currentSceneId} // TODO
+                                    variant="soft-rounded"
+                                    colorScheme="green"
+                                >
+                                    <TabList>
+                                        <Stack width="100%" spacing={0}>
+                                            {SceneManager.scenesInfo.map(
+                                                (_t, _i) => (
+                                                    <Tab
+                                                        key={_i}
+                                                        tabIndex={Number(_t.id)}
+                                                        height={8}
+                                                        justifyContent={"left"}
+                                                        borderRadius="md"
+                                                        cursor="default"
+                                                        _hover={
+                                                            _t.id !=
+                                                            EditorState.currentSceneId
+                                                                ? {
+                                                                      bg: "gray.200",
+                                                                  }
+                                                                : {}
                                                         }
-                                                    );
-                                                }}
-                                            >
-                                                Scene1
-                                            </Button>
-                                        </ListItem>
-                                    ))}
-                                </List>
+                                                        onClick={() => {
+                                                            EditorState.setCurrentSceneId(
+                                                                Number(_t.id)
+                                                            );
+                                                            currentScene?.scene.start(
+                                                                "Game",
+                                                                {
+                                                                    id: _i,
+                                                                }
+                                                            );
+                                                        }}
+                                                    >
+                                                        {_t.name}
+                                                    </Tab>
+                                                )
+                                            )}
+                                        </Stack>
+                                    </TabList>
+                                </Tabs>
                             </AccordionPanel>
                         </AccordionItem>
                         {/* Objects list */}
                         <AccordionItem id="objectsList">
                             <AccordionButton>
                                 <Box as="span" textAlign="left" flex={1}>
-                                    Objects
+                                    Layers
                                 </Box>
                                 <AddIcon
                                     boxSize={3}
@@ -194,27 +220,43 @@ function App() {
                                 <AccordionIcon marginLeft={1} />
                             </AccordionButton>
                             <AccordionPanel>
-                                <List spacing={2}>
-                                    {/* TODO */}
-                                    {SceneManager.layersInfo.map((_t, _i) => (
-                                        <ListItem key={_i}>
-                                            <Button
-                                                colorScheme="teal"
-                                                variant={"outline"}
-                                                onClick={() => {
-                                                    EditorState.setCurrentLayerId(
-                                                        _t.id
-                                                    );
-                                                }}
-                                            >
-                                                {
-                                                    SceneManager.layersInfo[_i]
-                                                        .name
-                                                }
-                                            </Button>
-                                        </ListItem>
-                                    ))}
-                                </List>
+                                <Tabs
+                                    variant="soft-rounded"
+                                    colorScheme="green"
+                                >
+                                    <TabList>
+                                        <Stack width="100%" spacing={0}>
+                                            {/* TODO */}
+                                            {SceneManager.layersInfo.map(
+                                                (_t, _i) => (
+                                                    <Tab
+                                                        key={_i}
+                                                        tabIndex={Number(_t.id)}
+                                                        height={8}
+                                                        justifyContent={"left"}
+                                                        borderRadius="md"
+                                                        cursor="default"
+                                                        _hover={
+                                                            _t.id !=
+                                                            EditorState.currentLayerId
+                                                                ? {
+                                                                      bg: "gray.200",
+                                                                  }
+                                                                : {}
+                                                        }
+                                                        onClick={() => {
+                                                            EditorState.setCurrentLayerId(
+                                                                _t.id
+                                                            );
+                                                        }}
+                                                    >
+                                                        {_t.name}
+                                                    </Tab>
+                                                )
+                                            )}
+                                        </Stack>
+                                    </TabList>
+                                </Tabs>
                             </AccordionPanel>
                         </AccordionItem>
                     </Accordion>
