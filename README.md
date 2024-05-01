@@ -2,6 +2,35 @@
 
 Jimu is a place where Creators go to design their Games, just like the Gym in Pokémon.
 
+Everyone can buidl their own worlds with Jimu, whether it's an indie game, an autonomous world, or a Web3 game.
+
+Current development phase:
+
+- [ ] Scene Editor (MVP version expected to be completed on May 9) 
+- [ ] Object Editor
+- [ ] Player Editor
+- [ ] UI Editor
+- [ ] Asset Manager
+- [ ] Run-time Simulator
+- [ ] Visual Logic Editor
+- [ ] Story Manager
+- [ ] Multi-language Manager (in-game)
+- [ ] Plug-in Manager
+- [ ] In-game Module Editor
+    - [ ] Items & Equipments
+    - [ ] Skills
+    - [ ] Teams
+- [ ] Prebuilt Gameplay
+    - [ ] Farm life sim
+    - [ ] Strategy RPG
+
+
+Recognizing that many Web2 developers may not be acquainted with Web3 development, Jimu strives to bridge the gap and encourage traditional Web2 developers to venture into Web3 development. In order to achieve this goal, each module of Jimu takes into account the implementation of the onchain logic for developers who are not familiar with Web3 development.
+
+Chains currently included in planning:
+- Starknet (Compatible with Dojo)
+- Aptos (Generating game assets with RMUD)
+
 ### Versions
 
 This project has been updated for:
