@@ -147,7 +147,10 @@ export class Game extends Scene {
         }
 
         // User input
-        if (this.input.manager.activePointer.primaryDown) {
+        if (
+            EditorState.currentFocus.current === EditorState.widgetName.SCENE &&
+            this.input.manager.activePointer.primaryDown
+        ) {
             this.onPrimaryDown(pointerTileXY);
         }
     }

@@ -9,17 +9,13 @@ import {
     AccordionPanel,
     AccordionIcon,
     Box,
-    Button,
-    List,
-    ListItem,
-    Radio,
-    RadioGroup,
     Stack,
     Tabs,
     TabList,
     Tab,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
+import Draggable from "react-draggable";
 import { SceneInfo, LayerInfo } from "./api/Scenes";
 import { EditorState } from "./EditorState";
 import { SceneManager } from "./managers/SceneManager";
@@ -32,6 +28,12 @@ function App() {
     //================================================================
     // ■ Define
     //================================================================
+    // Which part of Jimu in foucs now
+    EditorState.currentFocus = useRef<string>("");
+
+    // Scene draggable node ref
+    const sceneNodeRef = useRef(null);
+
     // References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
@@ -113,21 +115,50 @@ function App() {
     //================================================================
     return (
         <div id="app">
-            <div id="topBar" className="h-12"></div>
+            <div id="topBar" className="flex h-12">
+                <span className="my-auto ml-4">
+                    <a href="https://github.com/qgpcybs/jimu">
+                        Jimu v0.0.1 - An open source editor
+                    </a>
+                </span>
+            </div>
             <div
                 id="mainContent"
                 className="flex flex-row w-screen bg-white h-[calc(100vh-6rem)]"
             >
                 <div className="absolute z-0 pl-48">
-                    <div id="projectArea" className="">
-                        <PhaserGame
-                            ref={phaserRef}
-                            currentActiveScene={currentSceneFunc}
-                        />
-                    </div>
+                    <Draggable
+                        allowAnyClick
+                        useMiddleButton
+                        nodeRef={sceneNodeRef}
+                    >
+                        <div
+                            id="projectArea"
+                            ref={sceneNodeRef}
+                            className=""
+                            onMouseEnter={() => {
+                                EditorState.currentFocus.current =
+                                    EditorState.widgetName.SCENE;
+                            }}
+                            // onMouseLeave={() => {
+                            //     EditorState.currentFocus.current = "";
+                            // }}
+                        >
+                            <PhaserGame
+                                ref={phaserRef}
+                                currentActiveScene={currentSceneFunc}
+                            />
+                        </div>
+                    </Draggable>
                 </div>
 
-                <div className="min-w-48 flex-col flex bg-white bg-opacity-75 z-[1]">
+                <div
+                    className="min-w-48 flex-col flex bg-white bg-opacity-85 z-[1]"
+                    onMouseEnter={() => {
+                        EditorState.currentFocus.current =
+                            EditorState.widgetName.LEFT_CONTENT;
+                    }}
+                >
                     <Accordion defaultIndex={[0, 1]} allowMultiple>
                         {/* Scenes list */}
                         <AccordionItem id="scenesList">
@@ -263,7 +294,11 @@ function App() {
                 </div>
                 <div
                     id="rightContent"
-                    className="absolute right-0 text-right flex bg-white bg-opacity-75 z-[1]"
+                    className="absolute right-0 text-right flex bg-white bg-opacity-85 z-[1]"
+                    onMouseEnter={() => {
+                        EditorState.currentFocus.current =
+                            EditorState.widgetName.RIGHT_CONTENT;
+                    }}
                 >
                     <div className="w-[32rem] h-[64rem]">
                         <TilePalette onSelectTiles={handleSelectTiles} />
