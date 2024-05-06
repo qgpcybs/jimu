@@ -114,13 +114,20 @@ function App() {
     // ■ Rendering
     //================================================================
     return (
-        <div id="app">
-            <div id="topBar" className="flex h-12">
-                <span className="my-auto ml-4">
-                    <a href="https://github.com/qgpcybs/jimu">
-                        Jimu v0.0.1 - An open source editor
-                    </a>
-                </span>
+        <div
+            id="app"
+            onContextMenu={(e) => {
+                e.preventDefault();
+            }}
+        >
+            <div id="topBar" className="flex h-12  ">
+                <div className="pt-3 z-[1] w-screen bg-white bg-opacity-85">
+                    <span className="ml-4 ">
+                        <a href="https://github.com/qgpcybs/jimu">
+                            Jimu v0.0.1 - An open source editor
+                        </a>
+                    </span>
+                </div>
             </div>
             <div
                 id="mainContent"
@@ -131,6 +138,12 @@ function App() {
                         allowAnyClick
                         useMiddleButton
                         nodeRef={sceneNodeRef}
+                        onStart={() => {
+                            EditorState.onDragging = true;
+                        }}
+                        onStop={() => {
+                            EditorState.onDragging = false;
+                        }}
                     >
                         <div
                             id="projectArea"
@@ -140,9 +153,6 @@ function App() {
                                 EditorState.currentFocus.current =
                                     EditorState.widgetName.SCENE;
                             }}
-                            // onMouseLeave={() => {
-                            //     EditorState.currentFocus.current = "";
-                            // }}
                         >
                             <PhaserGame
                                 ref={phaserRef}

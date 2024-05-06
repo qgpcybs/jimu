@@ -24,9 +24,17 @@ export class EditorState {
      */
     static currentFocus: React.MutableRefObject<string>;
 
+    /**
+     * The widgets' name of Jimu
+     */
     static widgetName = {
         SCENE: "scene",
-        LEFT_CONTENT:'left content',
-        RIGHT_CONTENT:'right content',
+        LEFT_CONTENT: "left content",
+        RIGHT_CONTENT: "right content",
     };
+
+    /**
+     * Is something been dragging
+     */
+    static onDragging = false;
 }

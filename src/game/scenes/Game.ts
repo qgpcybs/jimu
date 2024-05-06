@@ -123,7 +123,9 @@ export class Game extends Scene {
         // The map has been loaded or created
         if (!this.tilemap || this.tilemap.layers.length < 1) return;
 
-        // console.log(this.children)
+        // Update only in focus
+        if (EditorState.currentFocus.current !== EditorState.widgetName.SCENE)
+            return;
 
         // Update cursor position (e.g. tile selected box)
         const worldPoint = this.input.activePointer.positionToCamera(
@@ -142,15 +144,15 @@ export class Game extends Scene {
         const deltaMoveXY = this.input.manager.activePointer.velocity;
 
         // Update selected box size and position
-        if (deltaMoveXY.x != 0 || deltaMoveXY.y != 0) {
+        if (
+            (deltaMoveXY.x != 0 || deltaMoveXY.y != 0) &&
+            !EditorState.onDragging
+        ) {
             this.onPointerMove(pointerWorldXY);
         }
 
         // User input
-        if (
-            EditorState.currentFocus.current === EditorState.widgetName.SCENE &&
-            this.input.manager.activePointer.primaryDown
-        ) {
+        if (this.input.manager.activePointer.primaryDown) {
             this.onPrimaryDown(pointerTileXY);
         }
     }
