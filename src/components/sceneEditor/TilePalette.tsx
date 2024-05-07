@@ -82,7 +82,7 @@ const TilePalette: FC<TilePaletteProps> = ({ onSelectTiles }) => {
     };
 
     return (
-        <div className="w-[35.75rem] h-[71.75rem] select-none">
+        <div className="w-[35.75rem] select-none">
             <div
                 className="grid grid-cols-[repeat(16,minmax(0,2rem))] gap-1"
                 onMouseUp={() => selectTilesEnd()}

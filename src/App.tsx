@@ -13,6 +13,10 @@ import {
     Tabs,
     TabList,
     Tab,
+    Menu,
+    MenuList,
+    MenuItem,
+    forwardRef,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import Draggable from "react-draggable";
@@ -33,6 +37,23 @@ function App() {
 
     // Scene draggable node ref
     const sceneNodeRef = useRef(null);
+
+    // Scene list menu switch
+    const [sceneListMenuShow, setSceneListMenuShow] = useState<boolean>(false);
+
+    // Scene list focus
+    const [sceneListFocus, setSceneListFocus] = useState<boolean>(false);
+
+    // Scene list menu ref
+    const sceneListMenuRef = forwardRef((props, ref) => (
+        <div ref={ref} {...props}></div>
+    ));
+
+    // Scene list menu position
+    const [sceneListMenuPosition, setSceneListMenuPosition] = useState({
+        x: 0,
+        y: 0,
+    });
 
     // References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
@@ -120,7 +141,7 @@ function App() {
                 e.preventDefault();
             }}
         >
-            <div id="topBar" className="flex h-12  ">
+            <div id="topBar" className="flex h-12">
                 <div className="pt-3 z-[1] w-screen bg-white bg-opacity-85">
                     <span className="ml-4 ">
                         <a href="https://github.com/qgpcybs/jimu">
@@ -133,7 +154,7 @@ function App() {
                 id="mainContent"
                 className="flex flex-row w-screen bg-white h-[calc(100vh-6rem)]"
             >
-                <div className="absolute z-0 pl-48">
+                <div className="absolute z-0 pl-48 max-w-[100vw] overflow-clip">
                     <Draggable
                         allowAnyClick
                         useMiddleButton
@@ -187,49 +208,95 @@ function App() {
                                 <AccordionIcon marginLeft={1} />
                             </AccordionButton>
                             <AccordionPanel>
-                                <Tabs
-                                    defaultIndex={EditorState.currentSceneId} // TODO
-                                    variant="soft-rounded"
-                                    colorScheme="green"
+                                <Menu
+                                    isLazy
+                                    isOpen={sceneListMenuShow}
+                                    closeOnBlur={!sceneListFocus}
+                                    onClose={() => {
+                                        setSceneListMenuShow(false);
+                                        console.log("close");
+                                    }}
                                 >
-                                    <TabList>
-                                        <Stack width="100%" spacing={0}>
-                                            {SceneManager.scenesInfo.map(
-                                                (_t, _i) => (
-                                                    <Tab
-                                                        key={_i}
-                                                        tabIndex={Number(_t.id)}
-                                                        height={8}
-                                                        justifyContent={"left"}
-                                                        borderRadius="md"
-                                                        cursor="default"
-                                                        _hover={
-                                                            _t.id !=
-                                                            EditorState.currentSceneId
-                                                                ? {
-                                                                      bg: "gray.200",
-                                                                  }
-                                                                : {}
-                                                        }
-                                                        onClick={() => {
-                                                            EditorState.setCurrentSceneId(
-                                                                Number(_t.id)
-                                                            );
-                                                            currentScene?.scene.start(
-                                                                "Game",
-                                                                {
-                                                                    id: _i,
-                                                                }
-                                                            );
-                                                        }}
-                                                    >
-                                                        {_t.name}
-                                                    </Tab>
-                                                )
-                                            )}
-                                        </Stack>
-                                    </TabList>
-                                </Tabs>
+                                    <Tabs
+                                        defaultIndex={
+                                            EditorState.currentSceneId
+                                        } // TODO
+                                        variant="soft-rounded"
+                                        colorScheme="green"
+                                        isManual
+                                        overflow={"auto"}
+                                        onMouseEnter={() => {
+                                            setSceneListFocus(true);
+                                        }}
+                                        onMouseLeave={() => {
+                                            setSceneListFocus(false);
+                                        }}
+                                    >
+                                        <TabList>
+                                            <Stack width="100%" spacing={0}>
+                                                {SceneManager.scenesInfo.map(
+                                                    (_t, _i) => (
+                                                        <Tab
+                                                            key={_i}
+                                                            tabIndex={Number(
+                                                                _t.id
+                                                            )}
+                                                            height={8}
+                                                            justifyContent={
+                                                                "left"
+                                                            }
+                                                            borderRadius="md"
+                                                            cursor="default"
+                                                            _hover={
+                                                                _t.id !=
+                                                                EditorState.currentSceneId
+                                                                    ? {
+                                                                          bg: "gray.200",
+                                                                      }
+                                                                    : {}
+                                                            }
+                                                            onClick={() => {
+                                                                EditorState.setCurrentSceneId(
+                                                                    Number(
+                                                                        _t.id
+                                                                    )
+                                                                );
+                                                                currentScene?.scene.start(
+                                                                    "Game",
+                                                                    {
+                                                                        id: _i,
+                                                                    }
+                                                                );
+                                                            }}
+                                                            onContextMenu={(
+                                                                e
+                                                            ) => {
+                                                                setSceneListMenuPosition(
+                                                                    {
+                                                                        x: e.clientX,
+                                                                        y: e.clientY,
+                                                                    }
+                                                                );
+                                                                setSceneListMenuShow(
+                                                                    true
+                                                                );
+                                                            }}
+                                                        >
+                                                            {_t.name}
+                                                        </Tab>
+                                                    )
+                                                )}
+                                            </Stack>
+                                        </TabList>
+                                    </Tabs>
+                                    <MenuList
+                                        position={"absolute"}
+                                        top={sceneListMenuPosition.y}
+                                        left={sceneListMenuPosition.x}
+                                    >
+                                        <MenuItem>Properties...</MenuItem>
+                                    </MenuList>
+                                </Menu>
                             </AccordionPanel>
                         </AccordionItem>
                         {/* Objects list */}
@@ -264,6 +331,9 @@ function App() {
                                 <Tabs
                                     variant="soft-rounded"
                                     colorScheme="green"
+                                    isManual
+                                    overflow={"auto"}
+                                    maxHeight={"20vh"}
                                 >
                                     <TabList>
                                         <Stack width="100%" spacing={0}>
@@ -304,13 +374,13 @@ function App() {
                 </div>
                 <div
                     id="rightContent"
-                    className="absolute right-0 text-right flex bg-white bg-opacity-85 z-[1]"
+                    className="absolute right-0 text-right flex z-[1] bg-white bg-opacity-85 "
                     onMouseEnter={() => {
                         EditorState.currentFocus.current =
                             EditorState.widgetName.RIGHT_CONTENT;
                     }}
                 >
-                    <div className="w-[32rem] h-[64rem]">
+                    <div className="">
                         <TilePalette onSelectTiles={handleSelectTiles} />
                     </div>
                 </div>
