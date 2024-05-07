@@ -327,6 +327,7 @@ export class Game extends Scene {
                     finDrawTileIndex < tilesetColumns * tilesetRows
                 ) {
                     // Add to the record of past drawing
+                    console.log("pointerTileXY:", pointerTileXY);
                     this.oldDrawTiles[currentLayerId][oldDrawTilesTime] = [];
                     this.oldDrawTiles[currentLayerId][oldDrawTilesTime].push({
                         x: pointerTileXY.x,

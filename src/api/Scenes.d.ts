@@ -30,6 +30,8 @@ export interface LayerData extends ObejctData {
 export interface SceneInfo {
     id: number | IDBValidKey;
     name: string;
+    width: number;
+    height: number;
 }
 
 export interface LayerInfo {

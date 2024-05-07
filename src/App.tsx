@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { IRefPhaserGame, PhaserGame } from "./game/PhaserGame";
 import TilePalette from "./components/sceneEditor/TilePalette";
 import { EventBus } from "./game/EventBus";
+import { Formik, Field, FieldProps } from "formik";
 import {
     Accordion,
     AccordionItem,
@@ -16,7 +17,19 @@ import {
     Menu,
     MenuList,
     MenuItem,
-    forwardRef,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalCloseButton,
+    ModalBody,
+    FormControl,
+    FormLabel,
+    Input,
+    useDisclosure,
+    Button,
+    NumberInput,
+    NumberInputField,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import Draggable from "react-draggable";
@@ -38,16 +51,14 @@ function App() {
     // Scene draggable node ref
     const sceneNodeRef = useRef(null);
 
+    // References to the PhaserGame component (game and scene are exposed)
+    const phaserRef = useRef<IRefPhaserGame | null>(null);
+
     // Scene list menu switch
     const [sceneListMenuShow, setSceneListMenuShow] = useState<boolean>(false);
 
     // Scene list focus
     const [sceneListFocus, setSceneListFocus] = useState<boolean>(false);
-
-    // Scene list menu ref
-    const sceneListMenuRef = forwardRef((props, ref) => (
-        <div ref={ref} {...props}></div>
-    ));
 
     // Scene list menu position
     const [sceneListMenuPosition, setSceneListMenuPosition] = useState({
@@ -55,13 +66,24 @@ function App() {
         y: 0,
     });
 
-    // References to the PhaserGame component (game and scene are exposed)
-    const phaserRef = useRef<IRefPhaserGame | null>(null);
+    // Current scene list item
+    const sceneListItem = useRef<number>(0);
+
+    // Scene properties modal
+    const {
+        isOpen: isScenePropertiesModalOpen,
+        onOpen: onScenePropertiesModalOpen,
+        onClose: onScenePropertiesModalClose,
+    } = useDisclosure();
 
     // Scenes information
     [SceneManager.scenesInfo, SceneManager.setScenesInfo] = useState<
         SceneInfo[]
     >([]);
+
+    // Editing scene properties
+    const [scenePropertiesEditing, setScenePropertiesEditing] =
+        useState<boolean>(false);
 
     // Current scene
     const [currentScene, setCurrentScene] = useState<Phaser.Scene>();
@@ -97,6 +119,12 @@ function App() {
                         EventBus.emit("editor-init-over");
                     });
                 } else {
+                    phaserRef.current?.game?.scale.setGameSize(
+                        SceneManager.scenesInfo[EditorState.currentSceneId]
+                            .width * 32,
+                        SceneManager.scenesInfo[EditorState.currentSceneId]
+                            .height * 32
+                    );
                     EventBus.emit("editor-init-over");
                 }
             });
@@ -106,6 +134,86 @@ function App() {
     // Switch scenes (Temp)
     const currentSceneFunc = (_scene: Phaser.Scene) => {
         setCurrentScene(_scene);
+    };
+
+    const editSceneProperties = (values: {
+        sceneName: string;
+        gridWidth: number;
+        gridHeight: number;
+    }) => {
+        console.log(111);
+        setScenePropertiesEditing(true);
+        const sceneInfo = SceneManager.scenesInfo[sceneListItem.current];
+        if (sceneInfo.name !== values.sceneName) {
+            SceneManager.renameScene(
+                sceneListItem.current,
+                values.sceneName,
+                () => {
+                    if (
+                        !sceneInfo?.width ||
+                        !sceneInfo?.height ||
+                        (sceneInfo.width === values.gridWidth &&
+                            sceneInfo.height === values.gridHeight)
+                    ) {
+                        setScenePropertiesEditing(false);
+                        return;
+                    } else {
+                        SceneManager.resizeScene(
+                            sceneListItem.current,
+                            values.gridWidth,
+                            values.gridHeight,
+                            () => {
+                                if (
+                                    phaserRef.current?.game &&
+                                    EditorState.currentSceneId ===
+                                        sceneListItem.current
+                                ) {
+                                    phaserRef.current.game.scale.setGameSize(
+                                        values.gridWidth * 32,
+                                        values.gridHeight * 32
+                                    );
+                                    currentScene?.scene.start("Game", {
+                                        id: EditorState.currentSceneId,
+                                    });
+                                    setScenePropertiesEditing(false);
+                                }
+                            }
+                        );
+                    }
+                }
+            );
+        } else {
+            if (
+                !sceneInfo?.width ||
+                !sceneInfo?.height ||
+                (sceneInfo.width === values.gridWidth &&
+                    sceneInfo.height === values.gridHeight)
+            ) {
+                setScenePropertiesEditing(false);
+                return;
+            } else {
+                SceneManager.resizeScene(
+                    sceneListItem.current,
+                    values.gridWidth,
+                    values.gridHeight,
+                    () => {
+                        if (
+                            phaserRef.current?.game &&
+                            EditorState.currentSceneId === sceneListItem.current
+                        ) {
+                            phaserRef.current.game.scale.setGameSize(
+                                values.gridWidth * 32,
+                                values.gridHeight * 32
+                            );
+                            currentScene?.scene.start("Game", {
+                                id: EditorState.currentSceneId,
+                            });
+                            setScenePropertiesEditing(false);
+                        }
+                    }
+                );
+            }
+        }
     };
 
     // // Switch scene layers
@@ -154,7 +262,7 @@ function App() {
                 id="mainContent"
                 className="flex flex-row w-screen bg-white h-[calc(100vh-6rem)]"
             >
-                <div className="absolute z-0 pl-48 max-w-[100vw] overflow-clip">
+                <div className="absolute z-0 pl-48 max-w-[100vw]">
                     <Draggable
                         allowAnyClick
                         useMiddleButton
@@ -214,7 +322,6 @@ function App() {
                                     closeOnBlur={!sceneListFocus}
                                     onClose={() => {
                                         setSceneListMenuShow(false);
-                                        console.log("close");
                                     }}
                                 >
                                     <Tabs
@@ -261,6 +368,18 @@ function App() {
                                                                         _t.id
                                                                     )
                                                                 );
+                                                                phaserRef.current?.game?.scale.setGameSize(
+                                                                    SceneManager
+                                                                        .scenesInfo[
+                                                                        _i
+                                                                    ].width *
+                                                                        32,
+                                                                    SceneManager
+                                                                        .scenesInfo[
+                                                                        _i
+                                                                    ].height *
+                                                                        32
+                                                                );
                                                                 currentScene?.scene.start(
                                                                     "Game",
                                                                     {
@@ -280,6 +399,8 @@ function App() {
                                                                 setSceneListMenuShow(
                                                                     true
                                                                 );
+                                                                sceneListItem.current =
+                                                                    _i;
                                                             }}
                                                         >
                                                             {_t.name}
@@ -294,9 +415,156 @@ function App() {
                                         top={sceneListMenuPosition.y}
                                         left={sceneListMenuPosition.x}
                                     >
-                                        <MenuItem>Properties...</MenuItem>
+                                        <MenuItem
+                                            onClick={onScenePropertiesModalOpen}
+                                        >
+                                            Properties...
+                                        </MenuItem>
                                     </MenuList>
                                 </Menu>
+                                <Modal
+                                    isOpen={isScenePropertiesModalOpen}
+                                    onClose={onScenePropertiesModalClose}
+                                >
+                                    <ModalOverlay />
+                                    <ModalContent>
+                                        <ModalHeader>
+                                            Edit scene properties
+                                        </ModalHeader>
+                                        <ModalCloseButton />
+                                        <ModalBody>
+                                            <Formik
+                                                initialValues={{
+                                                    sceneName:
+                                                        SceneManager.scenesInfo[
+                                                            sceneListItem
+                                                                .current
+                                                        ]?.name,
+                                                    gridWidth:
+                                                        SceneManager.scenesInfo[
+                                                            sceneListItem
+                                                                .current
+                                                        ]?.width,
+                                                    gridHeight:
+                                                        SceneManager.scenesInfo[
+                                                            sceneListItem
+                                                                .current
+                                                        ]?.height,
+                                                }}
+                                                onSubmit={editSceneProperties}
+                                            >
+                                                {({ handleSubmit }) => (
+                                                    <form
+                                                        onSubmit={handleSubmit}
+                                                    >
+                                                        <Stack spacing={4}>
+                                                            <FormControl>
+                                                                <FormLabel>
+                                                                    Scene name
+                                                                </FormLabel>
+                                                                <Field
+                                                                    as={Input}
+                                                                    name="sceneName"
+                                                                />
+                                                            </FormControl>
+                                                            <FormControl>
+                                                                <FormLabel>
+                                                                    Grids' width
+                                                                </FormLabel>
+                                                                <Field name="gridWidth">
+                                                                    {({
+                                                                        form,
+                                                                        field,
+                                                                    }: FieldProps) => (
+                                                                        <NumberInput
+                                                                            {...field}
+                                                                            max={
+                                                                                200
+                                                                            }
+                                                                            min={
+                                                                                1
+                                                                            }
+                                                                            step={
+                                                                                1
+                                                                            }
+                                                                            allowMouseWheel
+                                                                            onChange={(
+                                                                                value
+                                                                            ) =>
+                                                                                form.setFieldValue(
+                                                                                    field.name,
+                                                                                    value
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <NumberInputField />
+                                                                        </NumberInput>
+                                                                    )}
+                                                                </Field>
+                                                            </FormControl>
+                                                            <FormControl>
+                                                                <FormLabel>
+                                                                    Grids'
+                                                                    Height
+                                                                </FormLabel>
+                                                                <Field name="gridHeight">
+                                                                    {({
+                                                                        form,
+                                                                        field,
+                                                                    }: FieldProps) => (
+                                                                        <NumberInput
+                                                                            {...field}
+                                                                            max={
+                                                                                200
+                                                                            }
+                                                                            min={
+                                                                                1
+                                                                            }
+                                                                            step={
+                                                                                1
+                                                                            }
+                                                                            allowMouseWheel
+                                                                            onChange={(
+                                                                                value
+                                                                            ) =>
+                                                                                form.setFieldValue(
+                                                                                    field.name,
+                                                                                    value
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <NumberInputField />
+                                                                        </NumberInput>
+                                                                    )}
+                                                                </Field>
+                                                            </FormControl>
+                                                            <Button
+                                                                type="submit"
+                                                                colorScheme="green"
+                                                                isLoading={
+                                                                    scenePropertiesEditing
+                                                                }
+                                                                onClick={() => {
+                                                                    setTimeout(
+                                                                        () => {
+                                                                            if (
+                                                                                !scenePropertiesEditing
+                                                                            )
+                                                                                onScenePropertiesModalClose();
+                                                                        },
+                                                                        60
+                                                                    );
+                                                                }}
+                                                            >
+                                                                {"Save"}
+                                                            </Button>
+                                                        </Stack>
+                                                    </form>
+                                                )}
+                                            </Formik>
+                                        </ModalBody>
+                                    </ModalContent>
+                                </Modal>
                             </AccordionPanel>
                         </AccordionItem>
                         {/* Objects list */}
