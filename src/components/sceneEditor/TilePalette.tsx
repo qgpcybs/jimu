@@ -1,5 +1,8 @@
-import { FC, useState } from "react";
+import { FC, useState, useRef } from "react";
+import { Formik, Field } from "formik";
 import Tile from "./Tile";
+import FileInput from "../common/FileInput";
+import { Stack, Button } from "@chakra-ui/react";
 
 interface TilePaletteProps {
     onSelectTiles: (
@@ -83,6 +86,38 @@ const TilePalette: FC<TilePaletteProps> = ({ onSelectTiles }) => {
 
     return (
         <div className="select-none">
+            {/* Temp Code */}
+            <div className="text-left my-2 ml-2 mr-4">
+                <span className="break-words font-bold">
+                    Upload other tilesets
+                </span>
+                <Formik
+                    initialValues={{ file: "" }}
+                    onSubmit={(values) => {
+                        console.log(values?.image);
+                    }}
+                >
+                    {({ handleSubmit }) => (
+                        <form onSubmit={handleSubmit}>
+                            <Stack direction={"row"}>
+                                <Field
+                                    name="image"
+                                    id="image"
+                                    component={FileInput}
+                                />
+                                <Button type="submit" colorScheme="green">
+                                    {"Confirm"}
+                                </Button>
+                            </Stack>
+                        </form>
+                    )}
+                </Formik>
+                <span className="break-words w-[26rem] block">
+                    (Upload function haven't finished, but you can manually
+                    replace resources "grass.png")
+                </span>
+            </div>
+
             <div
                 className="grid grid-cols-[repeat(16,minmax(0,2rem))] gap-[0.125rem]"
                 onMouseUp={() => selectTilesEnd()}
