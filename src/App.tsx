@@ -260,9 +260,12 @@ function App() {
             </div>
             <div
                 id="mainContent"
-                className="flex flex-row w-screen bg-white h-[calc(100vh-6rem)]"
+                className="flex flex-row w-screen bg-white h-[calc(100vh-3rem)]"
             >
-                <div className="absolute z-0 pl-48 max-w-[100vw]">
+                <div
+                    id="middleContent"
+                    className="absolute z-0 pl-48 max-w-[100vw]"
+                >
                     <Draggable
                         allowAnyClick
                         useMiddleButton
@@ -292,6 +295,7 @@ function App() {
                 </div>
 
                 <div
+                    id="leftContent"
                     className="min-w-48 flex-col flex bg-white bg-opacity-85 z-[1]"
                     onMouseEnter={() => {
                         EditorState.currentFocus.current =
@@ -640,15 +644,17 @@ function App() {
                         </AccordionItem>
                     </Accordion>
                 </div>
+
                 <div
                     id="rightContent"
-                    className="absolute right-0 text-right flex z-[1] bg-white bg-opacity-85 "
+                    className="absolute right-0 text-right flex z-[1] bg-white bg-opacity-85 h-full"
                     onMouseEnter={() => {
                         EditorState.currentFocus.current =
                             EditorState.widgetName.RIGHT_CONTENT;
                     }}
                 >
-                    <div className="">
+                    <div id="inspector"></div>
+                    <div id="tilePalette" className="pl-0.5">
                         <TilePalette onSelectTiles={handleSelectTiles} />
                     </div>
                 </div>
