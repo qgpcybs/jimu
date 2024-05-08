@@ -8,7 +8,7 @@ function Tile({
     cursorVisible: boolean;
 }) {
     return (
-        <div className="tileContent relative w-8 h-8 overflow-clip rounded">
+        <div className="tileContent relative w-8 h-8 overflow-clip rounded-sm">
             <span className="absolute z-20">{cursorVisible}</span>
             <img
                 className="absolute max-w-none z-10"

@@ -50,6 +50,8 @@ export class SceneManager {
                 const scnenInfo: SceneInfo = {
                     id: item.primaryKey,
                     name: item.value.name,
+                    width: item.value.width,
+                    height: item.value.height,
                 };
                 _scenesInfo[item.value.id] = scnenInfo;
                 item.continue();
@@ -101,7 +103,7 @@ export class SceneManager {
      * @param id The index of scene. If the id has been used, the operation is invalidated
      */
     static createScene(
-        sceneName: string = "abab",
+        sceneName: string = "New scene",
         width: number = 40,
         height: number = 23,
         id?: number,
@@ -167,6 +169,97 @@ export class SceneManager {
                     SceneManager.updateScenesInfo(callback);
                 };
             }
+        };
+    }
+
+    /**
+     * Edit the name of the scene
+     * @param id Scene ID
+     * @param name Scene's new name
+     */
+    static renameScene(id: number, name: string, callback?: () => void) {
+        const trans = DatabaseManager.indexedDB.transaction(
+            [SceneManager.TABLENAME],
+            "readwrite"
+        );
+        const table = trans.objectStore(SceneManager.TABLENAME);
+        const getReq = table.get(id);
+        getReq.onsuccess = (event: Event) => {
+            const target = event.target as IDBOpenDBRequest;
+            const sceneData = target.result as SceneDatabase;
+            sceneData.name = name;
+            const putReq = table.put(sceneData);
+            putReq.onsuccess = () => {
+                // Update information
+                SceneManager.updateScenesInfo(callback);
+            };
+        };
+    }
+
+    /**
+     * Edit the width and height of the scene
+     * @param id Scene ID
+     * @param width New width
+     * @param height New height
+     */
+    static resizeScene(
+        id: number,
+        width: number,
+        height: number,
+        callback?: () => void
+    ) {
+        if ((width = Number(width)) < 1 || (height = Number(height)) < 1)
+            return;
+
+        const trans = DatabaseManager.indexedDB.transaction(
+            [SceneManager.TABLENAME],
+            "readwrite"
+        );
+        const table = trans.objectStore(SceneManager.TABLENAME);
+        const getReq = table.get(id);
+        getReq.onsuccess = (event: Event) => {
+            const target = event.target as IDBOpenDBRequest;
+            const preSceneDatabase = target.result as SceneDatabase;
+            const preObjects = preSceneDatabase.objects as LayerData[];
+            const objects: LayerData[] = [];
+            for (let i = 0; i < preObjects.length; i++) {
+                objects[i] = preObjects[i];
+
+                // Is tilemap
+                if (
+                    preObjects[i].type === "layer" &&
+                    preObjects[i].subType === "tilemap"
+                ) {
+                    const objectData: number[][] = [];
+                    for (let j = 0; j < height; j++) {
+                        objectData[j] = [];
+                        for (let k = 0; k < width; k++) {
+                            if (
+                                preObjects[i].data[j] != null &&
+                                preObjects[i].data[j][k] != null
+                            )
+                                objectData[j][k] = preObjects[i].data[j][k];
+                            else objectData[j][k] = -1;
+                        }
+                    }
+                    objects[i].data = objectData;
+                }
+            }
+
+            const sceneData = {
+                id: id,
+                name: preSceneDatabase.name,
+                width: width,
+                height: height,
+                objects: objects,
+            };
+
+            // Write database
+            const putReq = table.put(sceneData);
+            putReq.onsuccess = () => {
+                // Update information
+                SceneManager.updateScenesInfo(callback);
+            };
         };
     }
 
@@ -317,7 +410,7 @@ export class SceneManager {
             for (let i = 0; i < height; i++) {
                 layerData.data[i] = [];
                 for (let j = 0; j < width; j++) {
-                    layerData.data[i][j] = 225;
+                    layerData.data[i][j] = -1;
                 }
             }
 

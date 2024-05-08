@@ -1,0 +1,95 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+deleted file mode 100644
+index 77c91b22625608aa7859e34bfd0e0b2276a1ea1f..0000000000000000000000000000000000000000
+diff --git a/build/cjs/DraggableCore.js b/build/cjs/DraggableCore.js
+index 2fc7d5c99e2a24699a3d43c0357e74babbec5dff..b70bdd849bf87ba3c17a00946c86803fbe271ab9 100644
+--- a/build/cjs/DraggableCore.js
++++ b/build/cjs/DraggableCore.js
+@@ -86,6 +86,9 @@ class DraggableCore extends React.Component /*:: <DraggableCoreProps>*/{
+       // Only accept left-clicks.
+       if (!this.props.allowAnyClick && typeof e.button === 'number' && e.button !== 0) return false;
+ 
++      // Patch
++      if(this.props.useMiddleButton && e.button !== 1) return false;
++
+       // Get nodes. Be sure to grab relative document (could be iframed)
+       const thisNode = this.findDOMNode();
+       if (!thisNode || !thisNode.ownerDocument || !thisNode.ownerDocument.body) {
+@@ -305,6 +308,7 @@ _defineProperty(DraggableCore, "propTypes", {
+    * Defaults to `false`.
+    */
+   allowAnyClick: _propTypes.default.bool,
++  useMiddleButton:_propTypes.default.bool,
+   children: _propTypes.default.node.isRequired,
+   /**
+    * `disabled`, if true, stops the <Draggable> from dragging. All handlers,
+@@ -423,6 +427,7 @@ _defineProperty(DraggableCore, "propTypes", {
+ });
+ _defineProperty(DraggableCore, "defaultProps", {
+   allowAnyClick: false,
++  useMiddleButton:false,
+   // by default only accept left click
+   disabled: false,
+   enableUserSelectHack: true,
+diff --git a/build/web/react-draggable.min.js b/build/web/react-draggable.min.js
+index a34fbc5a0dd75ead6ef0f10d508446db63bb01b2..9cfd16e9eb200018e4f9efe65565f391965e9c55 100644
+--- a/build/web/react-draggable.min.js
++++ b/build/web/react-draggable.min.js
+@@ -556,6 +556,9 @@ class DraggableCore extends external_commonjs_react_commonjs2_react_amd_react_ro
+       // Only accept left-clicks.
+       if (!this.props.allowAnyClick && typeof e.button === 'number' && e.button !== 0) return false;
+ 
++      // Patch
++      if(this.props.useMiddleButton && e.button !== 1) return false;
++
+       // Get nodes. Be sure to grab relative document (could be iframed)
+       const thisNode = this.findDOMNode();
+       if (!thisNode || !thisNode.ownerDocument || !thisNode.ownerDocument.body) {
+@@ -774,6 +777,7 @@ _defineProperty(DraggableCore, "propTypes", {
+    * Defaults to `false`.
+    */
+   allowAnyClick: (prop_types_default()).bool,
++  useMiddleButton: (prop_types_default()).bool,
+   children: (prop_types_default()).node.isRequired,
+   /**
+    * `disabled`, if true, stops the <Draggable> from dragging. All handlers,
+@@ -892,6 +896,7 @@ _defineProperty(DraggableCore, "propTypes", {
+ });
+ _defineProperty(DraggableCore, "defaultProps", {
+   allowAnyClick: false,
++  useMiddleButton:false,
+   // by default only accept left click
+   disabled: false,
+   enableUserSelectHack: true,
+diff --git a/typings/index.d.ts b/typings/index.d.ts
+index bcbc6ff3faca553b8318964de52da9ab610f8330..781b4c3e61f0a9a37222a6b86cea39087f0e05f1 100644
+--- a/typings/index.d.ts
++++ b/typings/index.d.ts
+@@ -42,6 +42,7 @@ declare module 'react-draggable' {
+ 
+   export interface DraggableCoreProps {
+     allowAnyClick: boolean,
++    useMiddleButton: boolean,
+     cancel: string,
+     children?: React.ReactNode,
+     disabled: boolean,
+diff --git a/typings/test.tsx b/typings/test.tsx
+index 87562d4933df35a3800f97e90c7cede5d666f8f7..4ed79d64bd5d9cfbec692b33080eaa2f9979ae3b 100644
+--- a/typings/test.tsx
++++ b/typings/test.tsx
+@@ -21,6 +21,7 @@ ReactDOM.render(
+     onStop={handleStop}
+     offsetParent={document.body}
+     allowAnyClick={true}
++    useMiddleButton={true}
+     onMouseDown={handleMouseDown}
+     disabled={true}
+     enableUserSelectHack={false}
+@@ -46,6 +47,7 @@ ReactDOM.render(
+     handle=".handle"
+     cancel=".cancel"
+     allowAnyClick={true}
++    useMiddleButton={true}
+     disabled={true}
+     onMouseDown={handleMouseDown}
+     grid={[10, 10]}

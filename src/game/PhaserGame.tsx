@@ -72,7 +72,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(
         }, [currentActiveScene, ref]);
 
         return (
-            <div id="game-container" className="rounded overflow-hidden"></div>
+            <div id="game-container" className="rounded-sm overflow-hidden"></div>
         );
     }
 );
