@@ -117,7 +117,9 @@ function App() {
                 const layer = database.objects[0]; // Assuming you want the first object
                 const payload = {
                     name: layer.name,
+                    // TODO: Add all params as input.
                     description: "", // Example description
+                    
                     map: layer.data, // Converting array data to string if necessary
                     uri: "", // Placeholder URI
                     creator: "0x01" // Placeholder creator ID
