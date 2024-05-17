@@ -33,9 +33,18 @@ export class Game extends Scene {
         SceneManager.updateLayersInfo(this.sceneId);
     }
 
+    upload() {
+        // Save to the database
+        SceneManager.loadScene(this.sceneId, (database: SceneDatabase) => {
+            console.log("get the database:", database.objects);
+            // TODO: upload the database to the server.
+        })
+    }
+
     create() {
         // Getting from the database
         SceneManager.loadScene(this.sceneId, (database: SceneDatabase) => {
+            
             // Get layers data
             for (let i = 0; i < database.objects.length; i++) {
                 const objectData = database.objects[i] as LayerData;

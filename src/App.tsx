@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { IRefPhaserGame, PhaserGame } from "./game/PhaserGame";
 import TilePalette from "./components/sceneEditor/TilePalette";
 import { EventBus } from "./game/EventBus";
+import { Game } from "./game/scenes/Game";
 import { Formik, Field, FieldProps } from "formik";
 import {
     Accordion,
@@ -37,7 +38,7 @@ import { SceneInfo, LayerInfo } from "./api/Scenes";
 import { EditorState } from "./EditorState";
 import { SceneManager } from "./managers/SceneManager";
 import { DatabaseManager } from "./managers/DatabaseManger";
-
+import { SceneDatabase} from "./api/Scenes";
 /**
  * Entrance function
  */
@@ -108,6 +109,46 @@ function App() {
     // ■ Function
     //================================================================
     // Init the Jimu Editor
+
+    const uploadLayerToDatabase = () => {
+        // get the this.sceneId dynamically.
+        SceneManager.loadScene(EditorState.currentSceneId, async (database: SceneDatabase) => {
+            if (database.objects.length > 0) {
+                const layer = database.objects[0]; // Assuming you want the first object
+                const payload = {
+                    name: layer.name,
+                    description: "", // Example description
+                    map: layer.data, // Converting array data to string if necessary
+                    uri: "", // Placeholder URI
+                    creator: "0x01" // Placeholder creator ID
+                };
+    
+                try {
+                    const response = await fetch('https://map-manager.deno.dev/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer yourTokenHere' // if auth is needed
+                        },
+                        body: JSON.stringify(payload)
+                    });
+    
+                    const responseData = await response.json();
+                    // TODO: pop-up a message to the user with the response data.
+                    if (response.ok) {
+
+                        console.log("Upload successful:", responseData);
+                    } else {
+                        throw new Error(`Failed to upload: ${responseData.error}`);
+                    }
+                } catch (error) {
+                    console.error("Error uploading layer to database:", error);
+                }
+            } else {
+                console.log("No objects available in the scene to upload.");
+            }
+        });
+    }
     const editorInit = () => {
         // Open database
         DatabaseManager.init(() => {
@@ -643,6 +684,19 @@ function App() {
                             </AccordionPanel>
                         </AccordionItem>
                     </Accordion>
+                    <button
+                        onClick={uploadLayerToDatabase}
+                        className="upload-btn"
+                    >
+                        Upload this Scene <br></br>
+                        to Online Databse
+                    </button>
+                    <br></br>
+                    <button
+                        className="upload-btn"
+                    >
+                        Map-Aptos-Uploader
+                    </button>
                 </div>
 
                 <div
@@ -664,3 +718,4 @@ function App() {
 }
 
 export default App;
+
