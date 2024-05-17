@@ -6,7 +6,7 @@ Everyone can buidl their own worlds with Jimu, whether it's an indie game, an au
 
 Current development phase:
 
-- [ ] Scene Editor (MVP version expected to be completed on May 9) 
+- [x] Scene Editor (MVP version expected to be completed on May 9) 
 - [ ] Object Editor
 - [ ] Player Editor
 - [ ] UI Editor
