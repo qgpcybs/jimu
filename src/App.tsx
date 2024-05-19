@@ -266,6 +266,12 @@ function App() {
                     id="middleContent"
                     className="absolute z-0 pl-48 max-w-[100vw]"
                 >
+                    {/* Editing tilemap */}
+                    <div className="relative z-[1]">
+                        {/* TODO */}
+                        111
+                    </div>
+                    {/* Phaser rendering area */}
                     <Draggable
                         allowAnyClick
                         useMiddleButton
