@@ -383,7 +383,11 @@ export class Game extends Scene {
             }
         }
         // Save to the database
-        SceneManager.saveTileMap(this.sceneId, 0, tilemapLayer.layer.data);
+        SceneManager.saveTileMap(
+            this.sceneId,
+            currentLayerId,
+            tilemapLayer.layer.data
+        );
         this.unDoing = false;
     }
 }
