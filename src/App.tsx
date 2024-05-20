@@ -31,6 +31,12 @@ import {
     Button,
     NumberInput,
     NumberInputField,
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogContent,
+    AlertDialogOverlay,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import Draggable from "react-draggable";
@@ -39,14 +45,7 @@ import { EditorState } from "./EditorState";
 import { SceneManager } from "./managers/SceneManager";
 import { DatabaseManager } from "./managers/DatabaseManger";
 import { SceneDatabase } from "./api/Scenes";
-import {
-    AlertDialog,
-    AlertDialogBody,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogContent,
-    AlertDialogOverlay,
-} from "@chakra-ui/react";
+
 /**
  * Entrance function
  */
@@ -776,4 +775,3 @@ function App() {
 }
 
 export default App;
-
