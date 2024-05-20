@@ -645,7 +645,14 @@ function App() {
                         </AccordionItem>
                     </Accordion>
                 </div>
-                <div id="middleContent" className="flex-grow">
+                <div
+                    id="middleContent"
+                    className="flex-grow"
+                    onMouseEnter={() => {
+                        EditorState.currentFocus.current =
+                            EditorState.widgetName.MIDDLE_CONTENT;
+                    }}
+                >
                     {/* Editing tilemap */}
                     <Toolset />
                 </div>

@@ -26,6 +26,7 @@ import {
     FormLabel,
     Input,
     useDisclosure,
+    ButtonGroup,
     Button,
     IconButton,
     NumberInput,
@@ -33,17 +34,32 @@ import {
     Divider,
 } from "@chakra-ui/react";
 import { PiNotePencil } from "react-icons/pi";
+import { LuPaintBucket } from "react-icons/lu";
 
 const Toolset = () => {
     return (
         <div className="flex justify-between h-16 px-4 pt-2 bg-white z-[1] relative opacity-85">
-            <IconButton
-                aria-label="Paint a tile"
-                size="lg"
-                icon={<PiNotePencil />}
-            />
+            <Tabs variant="unstyled">
+                <TabList>
+                    <Tab _selected={{ color: "white", bg: "green.500" }}>
+                        <IconButton
+                            variant="none"
+                            aria-label="Paint a tile"
+                            fontSize={24}
+                            icon={<PiNotePencil />}
+                        />
+                    </Tab>
+                    <Tab _selected={{ color: "white", bg: "green.500" }}>
+                        <IconButton
+                            variant="none"
+                            aria-label="Paint all tiles"
+                            fontSize={24}
+                            icon={<LuPaintBucket />}
+                        />
+                    </Tab>
+                </TabList>
+            </Tabs>
             <Divider orientation="vertical" />
-            222
         </div>
     );
 };
