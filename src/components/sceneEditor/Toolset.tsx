@@ -37,6 +37,17 @@ import { PiNotePencil } from "react-icons/pi";
 import { LuPaintBucket } from "react-icons/lu";
 
 const Toolset = () => {
+    // Paint pencil (paint one tile)
+    const onPaintPencilClick = () => {
+
+    };
+    
+    // Paint bucket (paint a connected area)
+    const onPaintBucketClick = () => {
+
+    };
+
+    // Rendering
     return (
         <div className="flex justify-between h-16 px-4 pt-2 bg-white z-[1] relative opacity-85">
             <Tabs variant="unstyled">
@@ -47,6 +58,7 @@ const Toolset = () => {
                             aria-label="Paint a tile"
                             fontSize={24}
                             icon={<PiNotePencil />}
+                            onClick={onPaintPencilClick}
                         />
                     </Tab>
                     <Tab _selected={{ color: "white", bg: "green.500" }}>
@@ -55,6 +67,7 @@ const Toolset = () => {
                             aria-label="Paint all tiles"
                             fontSize={24}
                             icon={<LuPaintBucket />}
+                            onClick={onPaintBucketClick}
                         />
                     </Tab>
                 </TabList>
