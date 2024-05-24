@@ -89,7 +89,7 @@ export class Game extends Scene {
                 tilemapLayer.setDepth(objectData.depth);
 
                 // Init painting records of this layer
-                this.layerPainter.setPaintTilesRecord(objectData.id);
+                this.layerPainter.paintTilesRecord[objectData.id] = [];
             }
             // Final steps
             this.initSelectedBox(); // Init the selected box
@@ -150,7 +150,7 @@ export class Game extends Scene {
             this.onPointerMove(pointerWorldXY);
         }
 
-        // Handle user inputs (click)
+        // Handle left button down
         if (this.input.manager.activePointer.primaryDown) {
             this.onPrimaryDown(layerId, pointerTileXY);
         }
@@ -170,6 +170,17 @@ export class Game extends Scene {
             this.layerPainter.updatePaletteTilesPos,
             this.layerPainter
         );
+
+        this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
+            if (pointer.leftButtonReleased()) {
+                if (
+                    this.layerPainter.paintTilesRecord[
+                        EditorState.currentLayerId
+                    ].slice(-1).length > 0
+                )
+                    this.layerPainter.latestPaintTilesRecordEntryIndex++;
+            }
+        });
 
         this.input.keyboard?.on("keydown-Z", (event: KeyboardEvent) => {
             // Input: Ctrl + Z

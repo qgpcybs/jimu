@@ -31,6 +31,11 @@ export class LayerPainter {
     paintTilesRecord: SimpleTile[][][];
 
     /**
+     * the lastest entry index of paintTilesRecord
+     */
+    latestPaintTilesRecordEntryIndex: number;
+
+    /**
      * Init
      */
     constructor(sceneId: number) {
@@ -38,6 +43,7 @@ export class LayerPainter {
         this.sceneId = sceneId;
         this.isPainting = false;
         this.paintTilesRecord = [];
+        this.latestPaintTilesRecordEntryIndex = 0;
     }
 
     /**
@@ -101,31 +107,8 @@ export class LayerPainter {
     }
 
     /**
-     * Set paintTilesRecord
+     * Tilemap Pencil: Paint one tile
      */
-    setPaintTilesRecord(
-        layerId: number,
-        entryIndex?: number,
-        x?: number,
-        y?: number,
-        index?: number
-    ) {
-        if (entryIndex != null && x != null && y != null && index != null) {
-            if (!this.paintTilesRecord[layerId][entryIndex])
-                this.paintTilesRecord[layerId][entryIndex] = [];
-            this.paintTilesRecord[layerId][entryIndex].push({
-                x,
-                y,
-                index,
-            });
-        } else if (entryIndex != null) {
-            this.paintTilesRecord[layerId][entryIndex] = [];
-        } else {
-            this.paintTilesRecord[layerId] = [];
-        }
-    }
-
-    // Tilemap Pencil: Paint one tile
     tilemapPencil(
         tilemapLayer: Phaser.Tilemaps.TilemapLayer,
         layerId: number,
@@ -153,7 +136,7 @@ export class LayerPainter {
         const actualbottomRightY = Math.min(bottomRightY, tilesetRows - 1);
 
         // Get the index of the latest empty record
-        const emptyRecordIndex = this.paintTilesRecord[layerId].length;
+        const entryIndex = this.latestPaintTilesRecordEntryIndex;
 
         // Initialize the list of indexes in the tileset for tiles to be painted
         const paletteTileIndexes: number[][] = [];
@@ -170,14 +153,14 @@ export class LayerPainter {
                 )
                     continue; // Ignored if out of range of tilemap
                 paletteTileIndexes[i - topLeftY].push(tilesetColumns * i + j); // Add to the list
-
-                this.setPaintTilesRecord(
-                    layerId,
-                    emptyRecordIndex,
-                    layerTileX,
-                    layerTileY,
-                    tilemapLayer.layer.data[layerTileY][layerTileX].index
-                ); // Add to the record
+                if (!this.paintTilesRecord[layerId][entryIndex])
+                    this.paintTilesRecord[layerId][entryIndex] = []; // Initialize the new entry of record
+                this.paintTilesRecord[layerId][entryIndex].push({
+                    x: layerTileX,
+                    y: layerTileY,
+                    index: tilemapLayer.layer.data[layerTileY][layerTileX]
+                        .index,
+                }); // Add to the record
             }
         }
 
@@ -192,7 +175,9 @@ export class LayerPainter {
         this.isPainting = false;
     }
 
-    // Tilemap Bucket: Paint tiles in an connected area
+    /**
+     * Tilemap Pencil: Paint tiles in an connected area
+     */
     tilemapBucket(
         tilemapLayer: Phaser.Tilemaps.TilemapLayer,
         layerId: number,
@@ -212,7 +197,7 @@ export class LayerPainter {
         const tiles = this.paintTilesRecord[layerId]?.pop(); // Latest entry
         if (!tiles) return;
         this.isPainting = true;
-        for (let i = 0; i < tiles.length; i++) {
+        for (let i = tiles.length - 1; i >= 0; i--) {
             tilemapLayer.putTileAt(tiles[i].index, tiles[i].x, tiles[i].y);
         }
         SceneManager.saveTileMap(
