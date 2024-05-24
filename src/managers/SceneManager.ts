@@ -366,6 +366,7 @@ export class SceneManager {
         getReq.onsuccess = (event: Event) => {
             const target = event.target as IDBOpenDBRequest;
             const database = target.result as SceneDatabase;
+            console.log("database:", database);
             callback(database);
         };
         getReq.onerror = () => {
