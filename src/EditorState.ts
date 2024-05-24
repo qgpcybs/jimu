@@ -30,6 +30,7 @@ export class EditorState {
     static widgetName = {
         SCENE: "scene",
         LEFT_CONTENT: "left content",
+        MIDDLE_CONTENT: "middle content",
         RIGHT_CONTENT: "right content",
     };
 

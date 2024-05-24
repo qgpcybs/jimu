@@ -45,6 +45,7 @@ import { EditorState } from "./EditorState";
 import { SceneManager } from "./managers/SceneManager";
 import { DatabaseManager } from "./managers/DatabaseManger";
 import { SceneDatabase } from "./api/Scenes";
+import Toolset from "./components/sceneEditor/Toolset";
 
 /**
  * Entrance function
@@ -338,12 +339,13 @@ function App() {
             </div>
             <div
                 id="mainContent"
-                className="flex flex-row w-screen bg-white h-[calc(100vh-3rem)]"
+                className="flex flex-row justify-between w-screen bg-white h-[calc(100vh-3rem)]"
             >
                 <div
-                    id="middleContent"
+                    id="renderingContent"
                     className="absolute z-0 pl-48 max-w-[100vw]"
                 >
+                    {/* Phaser rendering area */}
                     <Draggable
                         allowAnyClick
                         useMiddleButton
@@ -371,7 +373,6 @@ function App() {
                         </div>
                     </Draggable>
                 </div>
-
                 <div
                     id="leftContent"
                     className="min-w-48 flex-col flex bg-white bg-opacity-85 z-[1]"
@@ -731,10 +732,20 @@ function App() {
                     <br></br>
                     <button className="upload-btn">Map-Aptos-Uploader</button>
                 </div>
-
+                <div
+                    id="middleContent"
+                    className="flex-grow"
+                    onMouseEnter={() => {
+                        EditorState.currentFocus.current =
+                            EditorState.widgetName.MIDDLE_CONTENT;
+                    }}
+                >
+                    {/* Editing tilemap */}
+                    <Toolset />
+                </div>
                 <div
                     id="rightContent"
-                    className="absolute right-0 text-right flex z-[1] bg-white bg-opacity-85 h-full"
+                    className="right-0 text-right flex z-[1] bg-white bg-opacity-85 h-full"
                     onMouseEnter={() => {
                         EditorState.currentFocus.current =
                             EditorState.widgetName.RIGHT_CONTENT;
