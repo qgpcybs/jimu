@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { IRefPhaserGame, PhaserGame } from "./game/PhaserGame";
 import TilePalette from "./components/sceneEditor/TilePalette";
 import { EventBus } from "./game/EventBus";
+import { Game } from "./game/scenes/Game";
 import { Formik, Field, FieldProps } from "formik";
 import {
     Accordion,
@@ -30,6 +31,12 @@ import {
     Button,
     NumberInput,
     NumberInputField,
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogContent,
+    AlertDialogOverlay,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 import Draggable from "react-draggable";
@@ -37,6 +44,7 @@ import { SceneInfo, LayerInfo } from "./api/Scenes";
 import { EditorState } from "./EditorState";
 import { SceneManager } from "./managers/SceneManager";
 import { DatabaseManager } from "./managers/DatabaseManger";
+import { SceneDatabase } from "./api/Scenes";
 import Toolset from "./components/sceneEditor/Toolset";
 
 /**
@@ -109,6 +117,76 @@ function App() {
     // ■ Function
     //================================================================
     // Init the Jimu Editor
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const cancelRef = useRef();
+    const [uploadLayerToDatabaseResult, setUploadLayerToDatabaseResult] =
+        useState<string>("");
+    const uploadLayerToDatabase = () => {
+        // get the this.sceneId dynamically.
+        SceneManager.loadScene(
+            EditorState.currentSceneId,
+            async (database: SceneDatabase) => {
+                if (database.objects.length > 0) {
+                    const layer = database.objects[0]; // Assuming you want the first object
+                    const payload = {
+                        name: layer.name,
+                        // TODO: Add all params as input.
+                        depth: layer.depth,
+                        type: layer.type,
+                        id: layer.id,
+                        subType: layer.subType,
+
+                        description: "", // Example description
+
+                        map: layer.data, // Converting array data to string if necessary
+                        uri: "", // Placeholder URI
+                        creator: "0x01", // Placeholder creator ID
+                    };
+
+                    try {
+                        const response = await fetch(
+                            "https://map-manager.deno.dev/create",
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: "Bearer yourTokenHere", // if auth is needed
+                                },
+                                body: JSON.stringify(payload),
+                            }
+                        );
+
+                        const responseData = await response.json();
+                        // TODO: pop-up a message to the user with the response data.
+                        if (response.ok) {
+                            setUploadLayerToDatabaseResult(
+                                `Upload successful:${JSON.stringify(
+                                    responseData
+                                )}`
+                            );
+                            onOpen();
+                            console.log("Upload successful:", responseData);
+                        } else {
+                            setUploadLayerToDatabaseResult(
+                                `Failed to upload: ${responseData.error}`
+                            );
+                            onOpen();
+                            throw new Error(
+                                `Failed to upload: ${responseData.error}`
+                            );
+                        }
+                    } catch (error) {
+                        console.error(
+                            "Error uploading layer to database:",
+                            error
+                        );
+                    }
+                } else {
+                    console.log("No objects available in the scene to upload.");
+                }
+            }
+        );
+    };
     const editorInit = () => {
         // Open database
         DatabaseManager.init(() => {
@@ -644,6 +722,15 @@ function App() {
                             </AccordionPanel>
                         </AccordionItem>
                     </Accordion>
+                    <button
+                        onClick={uploadLayerToDatabase}
+                        className="upload-btn"
+                    >
+                        Upload this Scene <br></br>
+                        to Online Databse
+                    </button>
+                    <br></br>
+                    <button className="upload-btn">Map-Aptos-Uploader</button>
                 </div>
                 <div
                     id="middleContent"
@@ -670,6 +757,30 @@ function App() {
                     </div>
                 </div>
             </div>
+            <AlertDialog
+                isOpen={isOpen}
+                leastDestructiveRef={cancelRef}
+                onClose={onClose}
+                isCentered
+            >
+                <AlertDialogOverlay>
+                    <AlertDialogContent>
+                        <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                            Upload Scene
+                        </AlertDialogHeader>
+
+                        <AlertDialogBody>
+                            {uploadLayerToDatabaseResult}
+                        </AlertDialogBody>
+
+                        <AlertDialogFooter>
+                            <Button ref={cancelRef} onClick={onClose}>
+                                close
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
         </div>
     );
 }
