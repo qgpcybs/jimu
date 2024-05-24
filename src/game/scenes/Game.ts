@@ -126,6 +126,9 @@ export class Game extends Scene {
             return;
         }
 
+        // Ensure not on dragging
+        if (EditorState.onDragging) return;
+
         // Get current layer id
         const layerId = EditorState.currentLayerId;
 
@@ -143,10 +146,7 @@ export class Game extends Scene {
         const deltaMoveXY = this.input.manager.activePointer.velocity;
 
         // Update tile selected box size and position
-        if (
-            (deltaMoveXY.x != 0 || deltaMoveXY.y != 0) &&
-            !EditorState.onDragging
-        ) {
+        if (deltaMoveXY.x != 0 || deltaMoveXY.y != 0) {
             this.onPointerMove(pointerWorldXY);
         }
 

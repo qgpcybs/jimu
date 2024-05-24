@@ -26,6 +26,7 @@ const Toolset = () => {
                         <Icon
                             aria-label="Paint a tile"
                             fontSize={24}
+                            marginY={1}
                             as={PiNotePencil}
                         />
                     </Tab>
@@ -36,6 +37,7 @@ const Toolset = () => {
                         <Icon
                             aria-label="Paint all tiles"
                             fontSize={24}
+                            marginY={1}
                             as={LuPaintBucket}
                         />
                     </Tab>
