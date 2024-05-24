@@ -1,50 +1,17 @@
-import { FC, useState, useRef } from "react";
-import { Formik, Field } from "formik";
-import Tile from "./Tile";
-import FileInput from "../common/FileInput";
-import {
-    Accordion,
-    AccordionItem,
-    AccordionButton,
-    AccordionPanel,
-    AccordionIcon,
-    Box,
-    Stack,
-    Tabs,
-    TabList,
-    Tab,
-    Menu,
-    MenuList,
-    MenuItem,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalCloseButton,
-    ModalBody,
-    FormControl,
-    FormLabel,
-    Input,
-    useDisclosure,
-    ButtonGroup,
-    Button,
-    IconButton,
-    NumberInput,
-    NumberInputField,
-    Divider,
-} from "@chakra-ui/react";
+import { SceneManager } from "../../managers/SceneManager";
+import { Tabs, TabList, Tab, IconButton, Divider } from "@chakra-ui/react";
 import { PiNotePencil } from "react-icons/pi";
 import { LuPaintBucket } from "react-icons/lu";
 
 const Toolset = () => {
     // Paint pencil (paint one tile)
     const onPaintPencilClick = () => {
-
+        SceneManager.currentToolsetIndex = SceneManager.toolset.PENCIL;
     };
-    
+
     // Paint bucket (paint a connected area)
     const onPaintBucketClick = () => {
-
+        SceneManager.currentToolsetIndex = SceneManager.toolset.BUCKET;
     };
 
     // Rendering

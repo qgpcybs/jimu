@@ -34,6 +34,19 @@ export class SceneManager {
     static setLayersInfo: React.Dispatch<React.SetStateAction<LayerInfo[]>>;
 
     /**
+     * The names for items' index in toolset
+     */
+    static toolset = {
+        PENCIL: 0,
+        BUCKET: 1,
+    };
+
+    /**
+     * The index of scene's toolset item current been selected
+     */
+    static currentToolsetIndex: number = this.toolset.PENCIL;
+
+    /**
      * Update the brief information of scenes
      */
     static updateScenesInfo(callback?: () => void) {

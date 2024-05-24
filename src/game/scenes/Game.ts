@@ -2,37 +2,52 @@ import { EventBus } from "../EventBus";
 import { Scene } from "phaser";
 import { SceneManager } from "../../managers/SceneManager";
 import { EditorState } from "../../EditorState";
-import { SceneDatabase, LayerData, SimpleTile } from "../../api/Scenes";
+import { SceneDatabase, LayerData } from "../../api/Scenes";
+import { LayerPainter } from "../../components/sceneEditor/LayerPainter";
 
 export class Game extends Scene {
     sceneId: number;
     camera: Phaser.Cameras.Scene2D.Camera;
+
     // layers: Phaser.GameObjects.Layer[];
+
     layers: Phaser.Tilemaps.TilemapLayer[];
     tilemap: Phaser.Tilemaps.Tilemap;
     background: Phaser.GameObjects.Image;
     gameText: Phaser.GameObjects.Text;
     controls: Phaser.Cameras.Controls.FixedKeyControl;
-    preDrawTile: Phaser.Math.Vector2;
-    preDrawTile2: Phaser.Math.Vector2 | null;
+
+    /**
+     * Tile selection box displayed on the scene
+     */
     selectedBox: Phaser.GameObjects.Graphics;
-    oldDrawPointerTileXY: Phaser.Math.Vector2 | null;
-    oldDrawTiles: SimpleTile[][][];
 
-    unDoing: boolean;
-    isDrawAreaChanged: boolean;
+    /**
+     * Example of the class to paint layers
+     */
+    layerPainter: LayerPainter;
 
+    /**
+     * Constructor
+     */
     constructor() {
         super("Game");
     }
 
+    /**
+     * Init the scene
+     * @param data id: sceneID
+     */
     init(data = { id: 0 }) {
         this.sceneId = data.id;
         this.layers = [];
-        this.oldDrawTiles = [];
+        this.layerPainter = new LayerPainter(this.sceneId);
         SceneManager.updateLayersInfo(this.sceneId);
     }
 
+    /**
+     * Auto handle after init
+     */
     create() {
         // Getting from the database
         SceneManager.loadScene(this.sceneId, (database: SceneDatabase) => {
@@ -58,6 +73,7 @@ export class Game extends Scene {
                 }));
 
                 // Load tilesets
+                // TODO: get different tilesets
                 const tilesPrimalPlateauGrass = tilemap.addTilesetImage(
                     "tiles-primal_plateau-grass"
                 ) as Phaser.Tilemaps.Tileset;
@@ -66,37 +82,26 @@ export class Game extends Scene {
                     tilesPrimalPlateauGrass,
                 ]) as Phaser.Tilemaps.TilemapLayer;
 
-                const index = this.layers.length;
-                this.layers[index] = tilemapLayer;
+                // Add to the array of layers
+                this.layers[this.layers.length] = tilemapLayer;
+
+                // Set the depth of this layer
                 tilemapLayer.setDepth(objectData.depth);
 
-                // this.layers[index] = this.add.layer();
-                // this.layers[index].add(tilemapLayer);
-
-                // Init drawing record list
-                this.oldDrawTiles[objectData.id] = [];
+                // Init painting records of this layer
+                this.layerPainter.setPaintTilesRecord(objectData.id);
             }
-            // Complete
-            this.createCompleted();
+            // Final steps
+            this.initSelectedBox(); // Init the selected box
+            EventBus.emit("current-scene-ready", this); // Emit event: scene creation is complete
+            this.onListener(); // Start listening to events
         });
-
-        // const tilesPrimalPlateauProps = this.map.addTilesetImage(
-        //     "tiles-primal_plateau-props"
-        // ) as Phaser.Tilemaps.Tileset;
-
-        // this.objectLayer = this.map.createBlankLayer(
-        //     "Object Layer",
-        //     tilesPrimalPlateauProps
-        // ) as Phaser.Tilemaps.TilemapLayer;
     }
 
-    loadTilesets() {}
-
     /**
-     * The last step of creating the scene
+     * Init the selected box
      */
-    createCompleted() {
-        // Init the selected box
+    initSelectedBox() {
         this.selectedBox = this.add.graphics();
         this.selectedBox.setDepth(9999);
         this.selectedBox.lineStyle(2, 0xffffff, 0.8);
@@ -106,44 +111,38 @@ export class Game extends Scene {
             this.tilemap.tileWidth,
             this.tilemap.tileHeight
         );
-
-        // Init drawing states
-        this.isDrawAreaChanged = false;
-        this.unDoing = false;
-
-        // Emit & listen event
-        EventBus.emit("current-scene-ready", this);
-        this.onListener();
     }
 
     /**
      * Automatically executed once per frame
      */
     update(): void {
-        // The map has been loaded or created
+        // Ensure the map has been loaded or created
         if (!this.tilemap || this.tilemap.layers.length < 1) return;
 
-        // Update only in focus
-        if (EditorState.currentFocus.current !== EditorState.widgetName.SCENE)
+        // Ensure the focus is within the scene
+        if (EditorState.currentFocus.current !== EditorState.widgetName.SCENE) {
+            this.selectedBox.alpha = 0; // Hide the selected box
             return;
+        }
+
+        // Get current layer id
+        const layerId = EditorState.currentLayerId;
 
         // Update cursor position (e.g. tile selected box)
         const worldPoint = this.input.activePointer.positionToCamera(
             this.cameras.main
         ) as Phaser.Math.Vector2;
-
         const pointerTileXY = this.tilemap.worldToTileXY(
             worldPoint.x,
             worldPoint.y
         );
-
         const pointerWorldXY = pointerTileXY
             ? this.tilemap.tileToWorldXY(pointerTileXY.x, pointerTileXY.y)
             : new Phaser.Math.Vector2(0, 0);
-
         const deltaMoveXY = this.input.manager.activePointer.velocity;
 
-        // Update selected box size and position
+        // Update tile selected box size and position
         if (
             (deltaMoveXY.x != 0 || deltaMoveXY.y != 0) &&
             !EditorState.onDragging
@@ -151,9 +150,9 @@ export class Game extends Scene {
             this.onPointerMove(pointerWorldXY);
         }
 
-        // User input
+        // Handle user inputs (click)
         if (this.input.manager.activePointer.primaryDown) {
-            this.onPrimaryDown(pointerTileXY);
+            this.onPrimaryDown(layerId, pointerTileXY);
         }
     }
 
@@ -168,25 +167,8 @@ export class Game extends Scene {
         // Receive tile Index
         EventBus.on(
             "paint-tiles",
-            (stX: number, stY: number, edX?: number, edY?: number) => {
-                if (
-                    this.preDrawTile &&
-                    this.preDrawTile.x == stX &&
-                    this.preDrawTile.y == stY &&
-                    this.preDrawTile2 &&
-                    edX &&
-                    edY &&
-                    this.preDrawTile2.x == edX &&
-                    this.preDrawTile2.y == edY
-                )
-                    return;
-                // Update tiles
-                this.preDrawTile = new Phaser.Math.Vector2(stX, stY);
-                if (edX && edY && edX > 0 && edY > 0) {
-                    this.preDrawTile2 = new Phaser.Math.Vector2(edX, edY);
-                } else this.preDrawTile2 = null;
-                this.isDrawAreaChanged = true;
-            }
+            this.layerPainter.updatePaletteTilesPos,
+            this.layerPainter
         );
 
         this.input.keyboard?.on("keydown-Z", (event: KeyboardEvent) => {
@@ -199,182 +181,71 @@ export class Game extends Scene {
                 } else {
                     // Common Action: Undo
                     console.log("Undo");
-                    this.undoLastDraw();
+                    this.layerPainter.undoTilemapPaint(
+                        this.layers[EditorState.currentLayerId],
+                        EditorState.currentLayerId
+                    );
                 }
             }
         });
     }
 
-    // Common Action: Move cursor
+    /**
+     * Handle the pointer move.
+     * Action 1: move cursor;
+     */
     onPointerMove(pointerWorldXY: Phaser.Math.Vector2 | null) {
         if (pointerWorldXY != null) {
+            // Show the selected box
+            this.selectedBox.alpha = 1;
+
+            // Set the position
             this.selectedBox.setPosition(pointerWorldXY.x, pointerWorldXY.y);
+
+            // Resize the selected box
+            // TODO
         }
     }
 
-    // Create Action: Draw tile
-    onPrimaryDown(pointerTileXY: Phaser.Math.Vector2 | null) {
-        // Tile index transform & Draw tile
-        if (pointerTileXY != null && this.preDrawTile) {
-            // Don't draw the same tile
-            if (
-                this.oldDrawPointerTileXY &&
-                this.oldDrawPointerTileXY.x == pointerTileXY.x &&
-                this.oldDrawPointerTileXY.y == pointerTileXY.y &&
-                !this.isDrawAreaChanged
+    /**
+     * Handle the primary button down.
+     * Action 1: paint tiles;
+     */
+    onPrimaryDown(layerId: number, pointerTileXY: Phaser.Math.Vector2 | null) {
+        // Ensure the painting conditions are okay
+        if (
+            !this.layerPainter.canTilemapPaint(
+                layerId,
+                pointerTileXY,
+                this.tilemap.width,
+                this.tilemap.height
             )
-                return;
-            // Don't draw over tilemap
-            if (
-                pointerTileXY.x > this.tilemap.width ||
-                pointerTileXY.y > this.tilemap.height ||
-                pointerTileXY.x < 0 ||
-                pointerTileXY.y < 0
-            )
-                return;
-            // Don't draw when undoing
-            if (this.unDoing) return;
-
-            // Get tileset's size
-            const currentLayerId = EditorState.currentLayerId;
-            const tilemapLayer = this.layers[currentLayerId];
-            const tilesetColumns = tilemapLayer.tileset[0].columns;
-            const tilesetRows = tilemapLayer.tileset[0].rows;
-
-            // Update old pointer
-            this.oldDrawPointerTileXY = pointerTileXY;
-
-            // Draw area used
-            this.isDrawAreaChanged = false;
-
-            // Each time save one action of drawing old tiles
-            const oldDrawTilesTime = this.oldDrawTiles[currentLayerId].length;
-            if (this.preDrawTile2) {
-                // The 2st tile means to draw an area
-                const finDrawTilesIndex: number[][] = [];
-                for (
-                    let i = this.preDrawTile.y;
-                    i <= this.preDrawTile2.y;
-                    i++
-                ) {
-                    for (
-                        let j = this.preDrawTile.x;
-                        j <= this.preDrawTile2.x;
-                        j++
-                    ) {
-                        const finDrawTileIndex = i * tilesetColumns + j;
-                        if (
-                            j < tilesetColumns &&
-                            finDrawTileIndex < tilesetColumns * tilesetRows
-                        ) {
-                            // It's not the line of the tilemap
-                            const currentLine = i - this.preDrawTile.y;
-                            // Init a new line or add to an exist line in array
-                            if (!finDrawTilesIndex[currentLine])
-                                finDrawTilesIndex[currentLine] = [];
-                            // Add to the list of ready to draw
-                            finDrawTilesIndex[currentLine].push(
-                                finDrawTileIndex
-                            );
-                            // Add to the record of past drawing
-                            const pastDrawX =
-                                pointerTileXY.x + j - this.preDrawTile.x;
-                            const pastDrawY =
-                                pointerTileXY.y + i - this.preDrawTile.y;
-                            if (
-                                pastDrawX < this.tilemap.width &&
-                                pastDrawY < this.tilemap.height
-                            ) {
-                                // Position must inside the map
-                                console.log(
-                                    this.oldDrawTiles[currentLayerId][
-                                        oldDrawTilesTime
-                                    ]
-                                );
-                                if (
-                                    this.oldDrawTiles[currentLayerId][
-                                        oldDrawTilesTime
-                                    ] === undefined
-                                )
-                                    this.oldDrawTiles[currentLayerId][
-                                        oldDrawTilesTime
-                                    ] = [];
-                                this.oldDrawTiles[currentLayerId][
-                                    oldDrawTilesTime
-                                ].push({
-                                    x: pastDrawX,
-                                    y: pastDrawY,
-                                    index: tilemapLayer.layer.data[pastDrawY][
-                                        pastDrawX
-                                    ].index,
-                                });
-                            }
-                        }
-                    }
-                }
-                // Draw the area
-                tilemapLayer.putTilesAt(
-                    finDrawTilesIndex,
-                    pointerTileXY.x,
-                    pointerTileXY.y
-                );
-            } else {
-                // Means just draw one tile
-                const finDrawTileIndex =
-                    this.preDrawTile.y * tilesetColumns + this.preDrawTile.x;
-                if (
-                    this.preDrawTile.x < tilesetColumns &&
-                    finDrawTileIndex < tilesetColumns * tilesetRows
-                ) {
-                    // Add to the record of past drawing
-                    console.log("pointerTileXY:", pointerTileXY);
-                    this.oldDrawTiles[currentLayerId][oldDrawTilesTime] = [];
-                    this.oldDrawTiles[currentLayerId][oldDrawTilesTime].push({
-                        x: pointerTileXY.x,
-                        y: pointerTileXY.y,
-                        index: tilemapLayer.layer.data[pointerTileXY.y][
-                            pointerTileXY.x
-                        ].index,
-                    });
-                    // Draw the tile
-                    tilemapLayer.putTileAt(
-                        finDrawTileIndex,
-                        pointerTileXY.x,
-                        pointerTileXY.y
-                    );
-                }
-            }
-
-            // Save to the database
-            SceneManager.saveTileMap(
-                this.sceneId,
-                currentLayerId,
-                tilemapLayer.layer.data
+        )
+            return;
+        // Paint tiles according to the selected tool
+        if (SceneManager.currentToolsetIndex === SceneManager.toolset.PENCIL) {
+            // Pencil
+            this.layerPainter.tilemapPencil(
+                this.layers[layerId],
+                layerId,
+                pointerTileXY as Phaser.Math.Vector2
+            );
+        } else if (
+            SceneManager.currentToolsetIndex === SceneManager.toolset.BUCKET
+        ) {
+            // Bucket
+            this.layerPainter.tilemapBucket(
+                this.layers[layerId],
+                layerId,
+                pointerTileXY as Phaser.Math.Vector2
             );
         }
-    }
 
-    undoLastDraw() {
-        if (this.unDoing) return;
-        this.unDoing = true;
-
-        const currentLayerId = EditorState.currentLayerId;
-
-        const currentOldDrawTiles = this.oldDrawTiles[currentLayerId].pop();
-
-        const tilemapLayer = this.layers[currentLayerId];
-
-        if (currentOldDrawTiles) {
-            for (let i = 0; i < currentOldDrawTiles.length; i++) {
-                tilemapLayer.putTileAt(
-                    currentOldDrawTiles[i].index,
-                    currentOldDrawTiles[i].x,
-                    currentOldDrawTiles[i].y
-                );
-            }
-        }
         // Save to the database
-        SceneManager.saveTileMap(this.sceneId, 0, tilemapLayer.layer.data);
-        this.unDoing = false;
+        SceneManager.saveTileMap(
+            this.sceneId,
+            layerId,
+            this.layers[layerId].layer.data
+        );
     }
 }
