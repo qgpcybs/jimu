@@ -2,7 +2,6 @@ import { useRef, useState, useEffect } from "react";
 import { IRefPhaserGame, PhaserGame } from "./game/PhaserGame";
 import TilePalette from "./components/sceneEditor/TilePalette";
 import { EventBus } from "./game/EventBus";
-import { Game } from "./game/scenes/Game";
 import { Formik, Field, FieldProps } from "formik";
 import {
     Accordion,
