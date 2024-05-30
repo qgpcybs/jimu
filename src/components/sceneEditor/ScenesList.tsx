@@ -1,11 +1,6 @@
 import { FC, useRef, useState } from "react";
 import {
     Stack,
-    Tabs,
-    TabList,
-    Tab,
-    Menu,
-    MenuList,
     MenuItem,
     Modal,
     ModalOverlay,
@@ -25,6 +20,7 @@ import { Formik, Field, FieldProps } from "formik";
 import { SceneManager } from "../../managers/SceneManager";
 import { EditorState } from "../../EditorState";
 import { IRefPhaserGame } from "../../game/PhaserGame";
+import CommonList from "../common/CommonList";
 
 interface ScenesListProps {
     phaserRef: React.MutableRefObject<IRefPhaserGame | null>;
@@ -32,18 +28,6 @@ interface ScenesListProps {
 }
 
 const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
-    // Scene list menu switch
-    const [sceneListMenuShow, setSceneListMenuShow] = useState<boolean>(false);
-
-    // Scene list focus
-    const [sceneListFocus, setSceneListFocus] = useState<boolean>(false);
-
-    // Scene list menu position
-    const [sceneListMenuPosition, setSceneListMenuPosition] = useState({
-        x: 0,
-        y: 0,
-    });
-
     // Current scene list item
     const sceneListItem = useRef<number>(0);
 
@@ -140,83 +124,23 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
 
     return (
         <div>
-            <Menu
-                isLazy
-                isOpen={sceneListMenuShow}
-                closeOnBlur={!sceneListFocus}
-                onClose={() => {
-                    setSceneListMenuShow(false);
+            <CommonList
+                array={SceneManager.scenesInfo}
+                itemIndex={sceneListItem}
+                index={EditorState.currentSceneId}
+                onTabClick={(_e, _t, _i) => {
+                    EditorState.setCurrentSceneId(Number(_t.id));
+                    phaserRef.current?.game?.scale.setGameSize(
+                        SceneManager.scenesInfo[_i].width * 32,
+                        SceneManager.scenesInfo[_i].height * 32
+                    );
+                    currentScene?.scene.start("Game", { id: _i }); // TODO: _i or _t.id
                 }}
             >
-                <Tabs
-                    defaultIndex={EditorState.currentSceneId} // TODO
-                    variant="soft-rounded"
-                    colorScheme="green"
-                    isManual
-                    overflow={"auto"}
-                    onMouseEnter={() => {
-                        setSceneListFocus(true);
-                    }}
-                    onMouseLeave={() => {
-                        setSceneListFocus(false);
-                    }}
-                >
-                    <TabList>
-                        <Stack width="100%" spacing={0}>
-                            {SceneManager.scenesInfo.map((_t, _i) => (
-                                <Tab
-                                    key={_i}
-                                    tabIndex={Number(_t.id)}
-                                    height={8}
-                                    justifyContent={"left"}
-                                    borderRadius="md"
-                                    cursor="default"
-                                    _hover={
-                                        _t.id != EditorState.currentSceneId
-                                            ? {
-                                                  bg: "gray.200",
-                                              }
-                                            : {}
-                                    }
-                                    onClick={() => {
-                                        EditorState.setCurrentSceneId(
-                                            Number(_t.id)
-                                        );
-                                        phaserRef.current?.game?.scale.setGameSize(
-                                            SceneManager.scenesInfo[_i].width *
-                                                32,
-                                            SceneManager.scenesInfo[_i].height *
-                                                32
-                                        );
-                                        currentScene?.scene.start("Game", {
-                                            id: _i,
-                                        });
-                                    }}
-                                    onContextMenu={(e) => {
-                                        setSceneListMenuPosition({
-                                            x: e.clientX,
-                                            y: e.clientY,
-                                        });
-                                        setSceneListMenuShow(true);
-                                        sceneListItem.current = _i;
-                                    }}
-                                >
-                                    {_t.name}
-                                </Tab>
-                            ))}
-                        </Stack>
-                    </TabList>
-                </Tabs>
-                <MenuList
-                    position={"absolute"}
-                    top={sceneListMenuPosition.y}
-                    left={sceneListMenuPosition.x}
-                >
-                    <MenuItem onClick={onScenePropertiesModalOpen}>
-                        Properties...
-                    </MenuItem>
-                </MenuList>
-            </Menu>
+                <MenuItem onClick={onScenePropertiesModalOpen}>
+                    Properties...
+                </MenuItem>
+            </CommonList>
             <Modal
                 isOpen={isScenePropertiesModalOpen}
                 onClose={onScenePropertiesModalClose}
