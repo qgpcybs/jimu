@@ -69,6 +69,7 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                             values.gridWidth,
                             values.gridHeight,
                             () => {
+                                console.log("resizeScene");
                                 if (
                                     phaserRef.current?.game &&
                                     EditorState.currentSceneId ===
@@ -81,8 +82,8 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                                     currentScene?.scene.start("Game", {
                                         id: EditorState.currentSceneId,
                                     });
-                                    setScenePropertiesEditing(false);
                                 }
+                                setScenePropertiesEditing(false);
                             }
                         );
                     }
@@ -114,8 +115,8 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                             currentScene?.scene.start("Game", {
                                 id: EditorState.currentSceneId,
                             });
-                            setScenePropertiesEditing(false);
                         }
+                        setScenePropertiesEditing(false);
                     }
                 );
             }
@@ -134,7 +135,7 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                         SceneManager.scenesInfo[_i].width * 32,
                         SceneManager.scenesInfo[_i].height * 32
                     );
-                    currentScene?.scene.start("Game", { id: _i }); // TODO: _i or _t.id
+                    currentScene?.scene.start("Game", { id: _t.id });
                 }}
             >
                 <MenuItem onClick={onScenePropertiesModalOpen}>
