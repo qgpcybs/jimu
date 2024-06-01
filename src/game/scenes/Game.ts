@@ -51,8 +51,9 @@ export class Game extends Scene {
     create() {
         // Getting from the database
         SceneManager.loadScene(this.sceneId, (database: SceneDatabase) => {
-            
             // Get layers data
+            console.log("sID:", this.sceneId);
+            console.log(database);
             for (let i = 0; i < database.objects.length; i++) {
                 const objectData = database.objects[i] as LayerData;
 

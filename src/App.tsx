@@ -151,20 +151,27 @@ function App() {
         DatabaseManager.init(() => {
             // Get scenes information
             SceneManager.updateScenesInfo(() => {
-                // Have any scenes been created?
-                if (SceneManager.scenesInfo.length < 1) {
-                    SceneManager.createScene("New Scene", 40, 23, 0, () => {
+                // There's no good way to solve the problem of useState assignments completing one frame slower, so let's do it the ugly way first
+                setTimeout(() => {
+                    // Have any scenes been created?
+                    if (SceneManager.scenesInfo.length < 1) {
+                        SceneManager.createScene("New Scene", 40, 23, 0, () => {
+                            EventBus.emit("editor-init-over");
+                        });
+                    } else {
+                        // Set the default current scene id
+                        const sceneInfo = SceneManager.scenesInfo[0];
+                        const sceneId = Number(SceneManager.scenesInfo[0].id);
+                        EditorState.setCurrentSceneId(sceneId);
+                        console.log("sceneId:", sceneId);
+                        console.log("sceneInfo:", sceneInfo);
+                        phaserRef.current?.game?.scale.setGameSize(
+                            sceneInfo.width * 32,
+                            sceneInfo.height * 32
+                        );
                         EventBus.emit("editor-init-over");
-                    });
-                } else {
-                    phaserRef.current?.game?.scale.setGameSize(
-                        SceneManager.scenesInfo[EditorState.currentSceneId]
-                            .width * 32,
-                        SceneManager.scenesInfo[EditorState.currentSceneId]
-                            .height * 32
-                    );
-                    EventBus.emit("editor-init-over");
-                }
+                    }
+                }, 1);
             });
         });
     };

@@ -6,7 +6,7 @@ import {
     LayerInfo,
 } from "../api/Scenes";
 import { DatabaseManager } from "./DatabaseManger";
-import { EventBus } from "../game/EventBus";
+
 export class SceneManager {
     /**
      * (Alias) The table name of scenes
@@ -60,20 +60,22 @@ export class SceneManager {
         openCursor.onsuccess = () => {
             const item = openCursor.result;
             if (item) {
-                const scnenInfo: SceneInfo = {
+                const sceneInfo: SceneInfo = {
                     id: item.primaryKey,
                     name: item.value.name,
                     width: item.value.width,
                     height: item.value.height,
                 };
-                _scenesInfo[item.value.id] = scnenInfo;
+                _scenesInfo.push(sceneInfo);
+                // _scenesInfo[item.value.id] = sceneInfo;
                 item.continue();
             } else {
                 SceneManager.setScenesInfo(_scenesInfo);
-                // EventBus.emit("editor-init-over");
-
                 // Callback
-                if (callback) callback();
+                if (callback)
+                    setTimeout(() => {
+                        callback();
+                    }, 1);
             }
         };
         openCursor.onerror = () => {
@@ -353,8 +355,8 @@ export class SceneManager {
     }
 
     /**
-     * Load the tilemap
-     * @param id the id of the tilemap
+     * Load the scene
+     * @param id the id of the scene
      */
     static loadScene(id: number, callback: (_database: SceneDatabase) => void) {
         const trans = DatabaseManager.indexedDB.transaction(
@@ -366,7 +368,6 @@ export class SceneManager {
         getReq.onsuccess = (event: Event) => {
             const target = event.target as IDBOpenDBRequest;
             const database = target.result as SceneDatabase;
-            console.log("database:", database);
             callback(database);
         };
         getReq.onerror = () => {
@@ -443,6 +444,22 @@ export class SceneManager {
                 SceneManager.updateLayersInfo(sceneId);
                 if (callback) callback();
             };
+        };
+    }
+
+    /**
+     * Delete the scene
+     * @param id the id of the scene
+     */
+    static deleteScene(id: number, callback?: () => void) {
+        const trans = DatabaseManager.indexedDB.transaction(
+            SceneManager.TABLENAME,
+            "readwrite"
+        );
+        const table = trans.objectStore(SceneManager.TABLENAME);
+        const getReq = table.delete(id);
+        getReq.onsuccess = () => {
+            SceneManager.updateScenesInfo(callback);
         };
     }
 }

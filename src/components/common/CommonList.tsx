@@ -3,7 +3,7 @@ import { Stack, Tabs, TabList, Tab, Menu, MenuList } from "@chakra-ui/react";
 
 interface CommonListProps {
     array: { id: number | IDBValidKey; name: string }[];
-    index: number;
+    id: number;
     itemIndex: React.MutableRefObject<number>;
     onTabClick: (
         _e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
@@ -15,7 +15,7 @@ interface CommonListProps {
 
 const CommonList: FC<CommonListProps> = ({
     array,
-    index,
+    id,
     itemIndex,
     onTabClick,
     children,
@@ -39,13 +39,17 @@ const CommonList: FC<CommonListProps> = ({
             }}
         >
             <Tabs
-                defaultIndex={index}
+                defaultIndex={0}
                 variant="soft-rounded"
                 colorScheme="green"
+                index={itemIndex.current}
                 isManual
                 overflow={"auto"}
                 onMouseEnter={() => setFocus(true)}
                 onMouseLeave={() => setFocus(false)}
+                onChange={(index: number) => {
+                    itemIndex.current = index;
+                }}
             >
                 <TabList>
                     <Stack width="100%" spacing={0}>
@@ -57,9 +61,7 @@ const CommonList: FC<CommonListProps> = ({
                                 justifyContent={"left"}
                                 borderRadius={"md"}
                                 cursor={"default"}
-                                _hover={
-                                    _t.id != index ? { bg: "gray.200" } : {}
-                                }
+                                _hover={_t.id != id ? { bg: "gray.200" } : {}}
                                 onClick={(_e) => {
                                     if (onTabClick) onTabClick(_e, _t, _i);
                                 }}

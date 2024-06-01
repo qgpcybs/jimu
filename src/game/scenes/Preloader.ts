@@ -1,4 +1,6 @@
 import { Scene } from "phaser";
+import { SceneManager } from "../../managers/SceneManager";
+import { EditorState } from "../../EditorState";
 import { EventBus } from "../EventBus";
 
 export class Preloader extends Scene {
@@ -45,7 +47,11 @@ export class Preloader extends Scene {
 
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
         EventBus.once("editor-init-over", () => {
-            this.scene.start("Game", { id: 0 });
+            setTimeout(() => {
+                this.scene.start("Game", {
+                    id: EditorState.currentSceneId,
+                });
+            }, 1);
         });
     }
 }
