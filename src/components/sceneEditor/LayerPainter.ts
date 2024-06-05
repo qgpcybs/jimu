@@ -183,7 +183,120 @@ export class LayerPainter {
         layerId: number,
         pointerTileXY: Phaser.Math.Vector2
     ) {
-        // TODO
+        // Initialize the index in the tileset for tiles to be painted
+        const paletteTileIndex =
+            tilemapLayer.tileset[0].columns * this.paletteTilePos.y +
+            this.paletteTilePos.x;
+
+        // The index of the pointer tile
+        const pointerTileIndex =
+            tilemapLayer.layer.data[pointerTileXY.y][pointerTileXY.x].index;
+
+        // Avoid to paint a same texture of the same tile
+        if (pointerTileIndex === paletteTileIndex) {
+            // TODO: The case where the indexes are the same when the palettes are different is not taken into account
+            return;
+        }
+
+        // Mark the start
+        this.isPainting = true;
+
+        // Initialize the new entry of record
+        const tilesDataOfPaintTilesRecord = (this.paintTilesRecord[layerId][
+            this.latestPaintTilesRecordEntryIndex
+        ] = []);
+
+        // Paint
+        this.tilemapBucketFloodFill(
+            pointerTileXY.x,
+            pointerTileXY.y,
+            tilemapLayer.tilemap.width - 1,
+            tilemapLayer.tilemap.height - 1,
+            pointerTileIndex,
+            paletteTileIndex,
+            tilemapLayer,
+            tilesDataOfPaintTilesRecord
+        );
+
+        // Mark the finish
+        this.isPainting = false;
+    }
+
+    /**
+     * Flood fill to paint bucket for a tilemap
+     */
+    tilemapBucketFloodFill(
+        x: number,
+        y: number,
+        maxX: number,
+        maxY: number,
+        prePaletteTileIndex: number,
+        aimPaletteTileIndex: number,
+        tilemapLayer: Phaser.Tilemaps.TilemapLayer,
+        tilesDataOfPaintTilesRecord: SimpleTile[]
+    ) {
+        tilesDataOfPaintTilesRecord.push({
+            x,
+            y,
+            index: prePaletteTileIndex,
+        });
+        tilemapLayer.putTileAt(aimPaletteTileIndex, x, y);
+        if (
+            x > 0 &&
+            prePaletteTileIndex === tilemapLayer.layer.data[y][x - 1].index
+        )
+            this.tilemapBucketFloodFill(
+                x - 1,
+                y,
+                maxX,
+                maxY,
+                prePaletteTileIndex,
+                aimPaletteTileIndex,
+                tilemapLayer,
+                tilesDataOfPaintTilesRecord
+            );
+        if (
+            y > 0 &&
+            prePaletteTileIndex === tilemapLayer.layer.data[y - 1][x].index
+        )
+            this.tilemapBucketFloodFill(
+                x,
+                y - 1,
+                maxX,
+                maxY,
+                prePaletteTileIndex,
+                aimPaletteTileIndex,
+                tilemapLayer,
+                tilesDataOfPaintTilesRecord
+            );
+        if (
+            x < maxX &&
+            prePaletteTileIndex === tilemapLayer.layer.data[y][x + 1].index
+        )
+            this.tilemapBucketFloodFill(
+                x + 1,
+                y,
+                maxX,
+                maxY,
+                prePaletteTileIndex,
+                aimPaletteTileIndex,
+                tilemapLayer,
+                tilesDataOfPaintTilesRecord
+            );
+        if (
+            y < maxY &&
+            prePaletteTileIndex === tilemapLayer.layer.data[y + 1][x].index
+        )
+            this.tilemapBucketFloodFill(
+                x,
+                y + 1,
+                maxX,
+                maxY,
+                prePaletteTileIndex,
+                aimPaletteTileIndex,
+                tilemapLayer,
+                tilesDataOfPaintTilesRecord
+            );
     }
 
     /**

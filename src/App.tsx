@@ -163,8 +163,6 @@ function App() {
                         const sceneInfo = SceneManager.scenesInfo[0];
                         const sceneId = Number(SceneManager.scenesInfo[0].id);
                         EditorState.setCurrentSceneId(sceneId);
-                        console.log("sceneId:", sceneId);
-                        console.log("sceneInfo:", sceneInfo);
                         phaserRef.current?.game?.scale.setGameSize(
                             sceneInfo.width * 32,
                             sceneInfo.height * 32
