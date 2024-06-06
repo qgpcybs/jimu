@@ -65,6 +65,7 @@ export class SceneManager {
                     name: item.value.name,
                     width: item.value.width,
                     height: item.value.height,
+                    tileSize: item.value.tileSize,
                 };
                 _scenesInfo.push(sceneInfo);
                 // _scenesInfo[item.value.id] = sceneInfo;
@@ -174,6 +175,7 @@ export class SceneManager {
                     name: sceneName,
                     width: width,
                     height: height,
+                    tileSize: 16,
                     objects: [layerData],
                 };
 
@@ -342,6 +344,7 @@ export class SceneManager {
                     name: sceneData.name,
                     width: sceneData.width,
                     height: sceneData.height,
+                    tileSize: sceneData.tileSize,
                     objects: [layerData],
                 };
             }

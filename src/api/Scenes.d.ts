@@ -3,6 +3,7 @@ export interface SceneDatabase extends IDBDatabase {
     name: string;
     width: number;
     height: number;
+    tileSize: number;
     objects: ObejctData[];
 }
 
@@ -11,6 +12,7 @@ export interface SceneData {
     name: string;
     width: number;
     height: number;
+    tileSize: number;
     objects: ObejctData[];
 }
 
@@ -32,6 +34,7 @@ export interface SceneInfo {
     name: string;
     width: number;
     height: number;
+    tileSize: number;
 }
 
 export interface LayerInfo {
