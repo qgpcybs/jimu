@@ -54,44 +54,13 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
         sceneName: string;
         gridWidth: number;
         gridHeight: number;
+        tileSize: number;
     }) => {
         setScenePropertiesEditing(true);
         const sceneInfo = SceneManager.scenesInfo[itemIndex.current];
         const sceneId = Number(sceneInfo.id);
-        if (sceneInfo.name !== values.sceneName) {
-            SceneManager.renameScene(sceneId, values.sceneName, () => {
-                if (
-                    !sceneInfo?.width ||
-                    !sceneInfo?.height ||
-                    (sceneInfo.width === values.gridWidth &&
-                        sceneInfo.height === values.gridHeight)
-                ) {
-                    setScenePropertiesEditing(false);
-                    return;
-                } else {
-                    SceneManager.resizeScene(
-                        sceneId,
-                        values.gridWidth,
-                        values.gridHeight,
-                        () => {
-                            if (
-                                phaserRef.current?.game &&
-                                EditorState.currentSceneId === sceneInfo.id
-                            ) {
-                                phaserRef.current.game.scale.setGameSize(
-                                    values.gridWidth * 32,
-                                    values.gridHeight * 32
-                                );
-                                currentScene?.scene.start("Game", {
-                                    id: EditorState.currentSceneId,
-                                });
-                            }
-                            setScenePropertiesEditing(false);
-                        }
-                    );
-                }
-            });
-        } else {
+
+        const afterRenameScene = () => {
             if (
                 !sceneInfo?.width ||
                 !sceneInfo?.height ||
@@ -108,7 +77,7 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                     () => {
                         if (
                             phaserRef.current?.game &&
-                            EditorState.currentSceneId === sceneId
+                            EditorState.currentSceneId === sceneInfo.id
                         ) {
                             phaserRef.current.game.scale.setGameSize(
                                 values.gridWidth * 32,
@@ -122,7 +91,16 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                     }
                 );
             }
-        }
+        };
+
+        // When the scene name changed
+        if (sceneInfo.name !== values.sceneName)
+            SceneManager.renameScene(
+                sceneId,
+                values.sceneName,
+                afterRenameScene
+            );
+        else afterRenameScene();
     };
 
     return (
