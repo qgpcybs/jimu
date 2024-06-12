@@ -211,9 +211,7 @@ export class LayerPainter {
         const stack: Phaser.Math.Vector2[] = [pointerTileXY];
 
         // Paint
-        let time = 0;
         while (stack.length) {
-            time++;
             const tileXY = stack.pop() as Phaser.Math.Vector2;
             tilesDataOfPaintTilesRecord.push({
                 x: tileXY.x,
@@ -246,7 +244,7 @@ export class LayerPainter {
             )
                 stack.push(new Phaser.Math.Vector2(tileXY.x, tileXY.y + 1));
         }
-        console.log("time:", time);
+        
         // Mark the finish
         this.isPainting = false;
     }

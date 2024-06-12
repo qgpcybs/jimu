@@ -122,13 +122,13 @@ const TilePalette: FC<TilePaletteProps> = ({ onSelectTiles }) => {
                 className="grid grid-cols-[repeat(22,minmax(0,1rem))] gap-[0.125rem]"
                 onMouseUp={() => selectTilesEnd()}
             >
-                {tiles.map((t, i) => (
+                {tiles.map((_t, _i) => (
                     <div
-                        key={i}
-                        onMouseDown={() => selectTilesStart(i)}
-                        onMouseOver={() => selectTilesOver(i)}
+                        key={_i}
+                        onMouseDown={() => selectTilesStart(_i)}
+                        onMouseOver={() => selectTilesOver(_i)}
                     >
-                        <Tile index={i} cursorVisible={selectedList[i]} />
+                        <Tile index={_i} cursorVisible={selectedList[_i]} />
                     </div>
                 ))}
             </div>
