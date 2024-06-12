@@ -5,7 +5,7 @@ import {
     SceneInfo,
     LayerInfo,
 } from "../api/Scenes";
-import { DatabaseManager } from "./DatabaseManger";
+import { DatabaseManager } from "./DatabaseManager";
 
 export class SceneManager {
     /**

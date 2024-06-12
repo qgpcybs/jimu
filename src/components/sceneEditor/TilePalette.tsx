@@ -2,7 +2,8 @@ import { FC, useState } from "react";
 import { Formik, Field } from "formik";
 import Tile from "./Tile";
 import FileInput from "../common/FileInput";
-import { Stack, Button } from "@chakra-ui/react";
+import { Stack, Button, ChakraProvider } from "@chakra-ui/react";
+import ImageUpload from "../common/ImageUpload";
 
 interface TilePaletteProps {
     onSelectTiles: (
@@ -91,31 +92,9 @@ const TilePalette: FC<TilePaletteProps> = ({ onSelectTiles }) => {
                 <span className="break-words font-bold">
                     Upload other tilesets
                 </span>
-                <Formik
-                    initialValues={{ file: "" }}
-                    onSubmit={(values) => {
-                        console.log(values?.image);
-                    }}
-                >
-                    {({ handleSubmit }) => (
-                        <form onSubmit={handleSubmit}>
-                            <Stack direction={"row"}>
-                                <Field
-                                    name="image"
-                                    id="image"
-                                    component={FileInput}
-                                />
-                                <Button type="submit" colorScheme="green">
-                                    {"Confirm"}
-                                </Button>
-                            </Stack>
-                        </form>
-                    )}
-                </Formik>
-                <span className="break-words w-[26rem] block">
-                    (Upload function haven't finished, but you can manually
-                    replace resources "TilesetFloor.png")
-                </span>
+                <ChakraProvider>
+                    <ImageUpload />
+                </ChakraProvider>
             </div>
 
             <div

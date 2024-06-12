@@ -1,18 +1,23 @@
 export class DatabaseManager {
     /**
-     * The version should be added when changing the database structure (like add table)
+     * Version should be added when changing the database structure (like add table)
      */
-    static version: number = 1;
+    static version: number = 2;
 
     /**
-     * The indexedDB database
+     * IndexedDB database
      */
     static indexedDB: IDBDatabase;
 
     /**
-     * The table name of scenes (Version 1)
+     * Table name of scenes (Version 1)
      */
     static TABLENAME_SCENES = "Scenes";
+
+    /**
+     * Table name of assets (Version 2)
+     */
+    static TABLENAME_ASSETS = "Assets";
 
     /**
      * Handle when editor start
@@ -28,16 +33,24 @@ export class DatabaseManager {
             // If database version update
             openReq.onupgradeneeded = function (event) {
                 // Create scenes table
-                DatabaseManager.indexedDB = (
+                const db = (DatabaseManager.indexedDB = (
                     event.target as IDBOpenDBRequest
-                ).result;
+                ).result);
+
                 // Update database
-                DatabaseManager.indexedDB.createObjectStore(
-                    DatabaseManager.TABLENAME_SCENES,
-                    {
+                !db.objectStoreNames.contains(
+                    DatabaseManager.TABLENAME_SCENES
+                ) &&
+                    db.createObjectStore(DatabaseManager.TABLENAME_SCENES, {
                         keyPath: "id",
-                    }
-                );
+                    });
+
+                !db.objectStoreNames.contains(
+                    DatabaseManager.TABLENAME_ASSETS
+                ) &&
+                    db.createObjectStore(DatabaseManager.TABLENAME_ASSETS, {
+                        keyPath: "uuid",
+                    });
             };
 
             // If database version no update

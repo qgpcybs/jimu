@@ -27,7 +27,7 @@ import Draggable from "react-draggable";
 import { SceneInfo, LayerInfo } from "./api/Scenes";
 import { EditorState } from "./EditorState";
 import { SceneManager } from "./managers/SceneManager";
-import { DatabaseManager } from "./managers/DatabaseManger";
+import { DatabaseManager } from "./managers/DatabaseManager";
 import Toolset from "./components/sceneEditor/Toolset";
 import { SceneDatabase } from "./api/Scenes";
 import SceneList from "./components/sceneEditor/ScenesList";
