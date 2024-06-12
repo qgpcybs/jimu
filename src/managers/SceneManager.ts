@@ -120,8 +120,9 @@ export class SceneManager {
      */
     static createScene(
         sceneName: string = "New scene",
-        width: number = 40,
-        height: number = 23,
+        width: number = 80,
+        height: number = 68,
+        tileSize: number = 16,
         id?: number,
         callback?: () => void
     ) {
@@ -175,7 +176,7 @@ export class SceneManager {
                     name: sceneName,
                     width: width,
                     height: height,
-                    tileSize: 16,
+                    tileSize: tileSize,
                     objects: [layerData],
                 };
 
@@ -216,18 +217,28 @@ export class SceneManager {
     /**
      * Edit the width and height of the scene
      * @param id Scene ID
-     * @param width New width
-     * @param height New height
+     * @param rowTilesNum New number of tiles in a row
+     * @param columnTilesNum New number of tiles in a column
+     * @param tileSize New tile size
      */
     static resizeScene(
         id: number,
-        width: number,
-        height: number,
+        rowTilesNum: number,
+        columnTilesNum: number,
+        tileSize: number,
         callback?: () => void
     ) {
-        if ((width = Number(width)) < 1 || (height = Number(height)) < 1)
+        // Avoid illegal number of grids
+        if (
+            (rowTilesNum = Number(rowTilesNum)) < 1 ||
+            (columnTilesNum = Number(columnTilesNum)) < 1
+        )
             return;
 
+        // Avoid illegal tile size
+        if (tileSize !== Math.floor(tileSize)) return;
+
+        // Open the database
         const trans = DatabaseManager.indexedDB.transaction(
             [SceneManager.TABLENAME],
             "readwrite"
@@ -248,9 +259,9 @@ export class SceneManager {
                     preObjects[i].subType === "tilemap"
                 ) {
                     const objectData: number[][] = [];
-                    for (let j = 0; j < height; j++) {
+                    for (let j = 0; j < columnTilesNum; j++) {
                         objectData[j] = [];
-                        for (let k = 0; k < width; k++) {
+                        for (let k = 0; k < rowTilesNum; k++) {
                             if (
                                 preObjects[i].data[j] != null &&
                                 preObjects[i].data[j][k] != null
@@ -263,11 +274,12 @@ export class SceneManager {
                 }
             }
 
-            const sceneData = {
+            const sceneData: SceneData = {
                 id: id,
                 name: preSceneDatabase.name,
-                width: width,
-                height: height,
+                width: rowTilesNum,
+                height: columnTilesNum,
+                tileSize: tileSize,
                 objects: objects,
             };
 

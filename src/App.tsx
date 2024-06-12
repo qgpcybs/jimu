@@ -155,17 +155,24 @@ function App() {
                 setTimeout(() => {
                     // Have any scenes been created?
                     if (SceneManager.scenesInfo.length < 1) {
-                        SceneManager.createScene("New Scene", 40, 23, 0, () => {
-                            EventBus.emit("editor-init-over");
-                        });
+                        SceneManager.createScene(
+                            "New Scene",
+                            80,
+                            68,
+                            16,
+                            0,
+                            () => {
+                                EventBus.emit("editor-init-over");
+                            }
+                        );
                     } else {
                         // Set the default current scene id
                         const sceneInfo = SceneManager.scenesInfo[0];
                         const sceneId = Number(SceneManager.scenesInfo[0].id);
                         EditorState.setCurrentSceneId(sceneId);
                         phaserRef.current?.game?.scale.setGameSize(
-                            sceneInfo.width * 32,
-                            sceneInfo.height * 32
+                            sceneInfo.width * sceneInfo.tileSize,
+                            sceneInfo.height * sceneInfo.tileSize
                         );
                         EventBus.emit("editor-init-over");
                     }

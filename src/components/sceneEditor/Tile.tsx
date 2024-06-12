@@ -8,15 +8,15 @@ function Tile({
     cursorVisible: boolean;
 }) {
     return (
-        <div className="tileContent relative w-8 h-8 overflow-clip rounded-sm">
+        <div className="tileContent relative w-4 h-4 overflow-clip rounded-sm">
             <span className="absolute z-20">{cursorVisible}</span>
             <img
                 className="absolute max-w-none z-10"
-                src="./assets/tilemaps/primal_plateau/grass.png"
+                src="./assets/tilemaps/default/TilesetFloor.png"
                 draggable="false"
                 style={{
-                    top: -Math.floor(index / 16) * 32,
-                    left: -(index % 16) * 32,
+                    top: -Math.floor(index / 22) * 16,
+                    left: -(index % 22) * 16,
                 }}
             />
             <img

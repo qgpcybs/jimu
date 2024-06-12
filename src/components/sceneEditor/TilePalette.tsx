@@ -14,17 +14,17 @@ interface TilePaletteProps {
 }
 
 const TilePalette: FC<TilePaletteProps> = ({ onSelectTiles }) => {
-    const tiles = Array.from({ length: 16 * 32 });
+    const tiles = Array.from({ length: 26 * 26 });
 
     const [selectedList, setSelectedList] = useState<boolean[]>(
-        new Array(16 * 32).fill(false)
+        new Array(26 * 26).fill(false)
     );
 
     const [boxingIndexStart, setBoxingIndexStart] = useState<number>(-1);
 
     const selectedTile = (index: number) => {
-        const stColumn = index % 16;
-        const stRow = Math.floor(index / 16);
+        const stColumn = index % 22;
+        const stRow = Math.floor(index / 22);
         const newSelectedList = selectedList.map((s, i) => {
             if (i === index) return true;
             else return false;
@@ -48,10 +48,10 @@ const TilePalette: FC<TilePaletteProps> = ({ onSelectTiles }) => {
 
     const selectedTiles = (boxingIndexEnd: number) => {
         if (boxingIndexStart < 0 || boxingIndexEnd < 0) return;
-        const stColumn = boxingIndexStart % 16;
-        const stRow = Math.floor(boxingIndexStart / 16);
-        const edColumn = boxingIndexEnd % 16;
-        const edRow = Math.floor(boxingIndexEnd / 16);
+        const stColumn = boxingIndexStart % 22;
+        const stRow = Math.floor(boxingIndexStart / 22);
+        const edColumn = boxingIndexEnd % 22;
+        const edRow = Math.floor(boxingIndexEnd / 22);
         const leftTopColumn = Math.min(stColumn, edColumn);
         const leftTopRow = Math.min(stRow, edRow);
         const rightBottomColumn = Math.max(stColumn, edColumn);
@@ -63,8 +63,8 @@ const TilePalette: FC<TilePaletteProps> = ({ onSelectTiles }) => {
             onSelectTiles(leftTopColumn, leftTopRow);
         } else {
             const newSelectedList = selectedList.map((s, i) => {
-                const iColumn = i % 16;
-                const iRow = Math.floor(i / 16);
+                const iColumn = i % 22;
+                const iRow = Math.floor(i / 22);
                 if (
                     iColumn < leftTopColumn ||
                     iRow < leftTopRow ||
@@ -114,12 +114,12 @@ const TilePalette: FC<TilePaletteProps> = ({ onSelectTiles }) => {
                 </Formik>
                 <span className="break-words w-[26rem] block">
                     (Upload function haven't finished, but you can manually
-                    replace resources "grass.png")
+                    replace resources "TilesetFloor.png")
                 </span>
             </div>
 
             <div
-                className="grid grid-cols-[repeat(16,minmax(0,2rem))] gap-[0.125rem]"
+                className="grid grid-cols-[repeat(22,minmax(0,1rem))] gap-[0.125rem]"
                 onMouseUp={() => selectTilesEnd()}
             >
                 {tiles.map((t, i) => (
