@@ -202,101 +202,53 @@ export class LayerPainter {
         this.isPainting = true;
 
         // Initialize the new entry of record
-        const tilesDataOfPaintTilesRecord = (this.paintTilesRecord[layerId][
-            this.latestPaintTilesRecordEntryIndex
-        ] = []);
+        const tilesDataOfPaintTilesRecord: SimpleTile[] =
+            (this.paintTilesRecord[layerId][
+                this.latestPaintTilesRecordEntryIndex
+            ] = []);
+
+        // Initialize the stack
+        const stack: Phaser.Math.Vector2[] = [pointerTileXY];
 
         // Paint
-        this.tilemapBucketFloodFill(
-            pointerTileXY.x,
-            pointerTileXY.y,
-            tilemapLayer.tilemap.width - 1,
-            tilemapLayer.tilemap.height - 1,
-            pointerTileIndex,
-            paletteTileIndex,
-            tilemapLayer,
-            tilesDataOfPaintTilesRecord
-        );
-
+        let time = 0;
+        while (stack.length) {
+            time++;
+            const tileXY = stack.pop() as Phaser.Math.Vector2;
+            tilesDataOfPaintTilesRecord.push({
+                x: tileXY.x,
+                y: tileXY.y,
+                index: pointerTileIndex,
+            });
+            tilemapLayer.putTileAt(paletteTileIndex, tileXY.x, tileXY.y);
+            if (
+                tileXY.x > 0 &&
+                pointerTileIndex ===
+                    tilemapLayer.layer.data[tileXY.y][tileXY.x - 1].index
+            )
+                stack.push(new Phaser.Math.Vector2(tileXY.x - 1, tileXY.y));
+            if (
+                tileXY.x < tilemapLayer.tilemap.width - 1 &&
+                pointerTileIndex ===
+                    tilemapLayer.layer.data[tileXY.y][tileXY.x + 1].index
+            )
+                stack.push(new Phaser.Math.Vector2(tileXY.x + 1, tileXY.y));
+            if (
+                tileXY.y > 0 &&
+                pointerTileIndex ===
+                    tilemapLayer.layer.data[tileXY.y - 1][tileXY.x].index
+            )
+                stack.push(new Phaser.Math.Vector2(tileXY.x, tileXY.y - 1));
+            if (
+                tileXY.y < tilemapLayer.tilemap.height - 1 &&
+                pointerTileIndex ===
+                    tilemapLayer.layer.data[tileXY.y + 1][tileXY.x].index
+            )
+                stack.push(new Phaser.Math.Vector2(tileXY.x, tileXY.y + 1));
+        }
+        console.log("time:", time);
         // Mark the finish
         this.isPainting = false;
-    }
-
-    /**
-     * Flood fill to paint bucket for a tilemap
-     */
-    tilemapBucketFloodFill(
-        x: number,
-        y: number,
-        maxX: number,
-        maxY: number,
-        prePaletteTileIndex: number,
-        aimPaletteTileIndex: number,
-        tilemapLayer: Phaser.Tilemaps.TilemapLayer,
-        tilesDataOfPaintTilesRecord: SimpleTile[]
-    ) {
-        tilesDataOfPaintTilesRecord.push({
-            x,
-            y,
-            index: prePaletteTileIndex,
-        });
-        tilemapLayer.putTileAt(aimPaletteTileIndex, x, y);
-        if (
-            x > 0 &&
-            prePaletteTileIndex === tilemapLayer.layer.data[y][x - 1].index
-        )
-            this.tilemapBucketFloodFill(
-                x - 1,
-                y,
-                maxX,
-                maxY,
-                prePaletteTileIndex,
-                aimPaletteTileIndex,
-                tilemapLayer,
-                tilesDataOfPaintTilesRecord
-            );
-        if (
-            y > 0 &&
-            prePaletteTileIndex === tilemapLayer.layer.data[y - 1][x].index
-        )
-            this.tilemapBucketFloodFill(
-                x,
-                y - 1,
-                maxX,
-                maxY,
-                prePaletteTileIndex,
-                aimPaletteTileIndex,
-                tilemapLayer,
-                tilesDataOfPaintTilesRecord
-            );
-        if (
-            x < maxX &&
-            prePaletteTileIndex === tilemapLayer.layer.data[y][x + 1].index
-        )
-            this.tilemapBucketFloodFill(
-                x + 1,
-                y,
-                maxX,
-                maxY,
-                prePaletteTileIndex,
-                aimPaletteTileIndex,
-                tilemapLayer,
-                tilesDataOfPaintTilesRecord
-            );
-        if (
-            y < maxY &&
-            prePaletteTileIndex === tilemapLayer.layer.data[y + 1][x].index
-        )
-            this.tilemapBucketFloodFill(
-                x,
-                y + 1,
-                maxX,
-                maxY,
-                prePaletteTileIndex,
-                aimPaletteTileIndex,
-                tilemapLayer,
-                tilesDataOfPaintTilesRecord
-            );
     }
 
     /**
