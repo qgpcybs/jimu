@@ -33,12 +33,12 @@ export class Preloader extends Scene {
 
         this.load.image(
             "tiles-primal_plateau-grass",
-            "tilemaps/primal_plateau/grass.png"
+            "tilemaps/default/TilesetFloor.png"
         );
-        this.load.image(
-            "tiles-primal_plateau-props",
-            "tilemaps/primal_plateau/props.png"
-        );
+        // this.load.image(
+        //     "tiles-primal_plateau-props",
+        //     "tilemaps/primal_plateau/props.png"
+        // );
     }
 
     create() {

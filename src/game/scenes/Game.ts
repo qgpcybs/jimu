@@ -67,8 +67,8 @@ export class Game extends Scene {
 
                 // Create the map
                 const tilemap = (this.tilemap = this.make.tilemap({
-                    tileWidth: 32,
-                    tileHeight: 32,
+                    tileWidth: database.tileSize,
+                    tileHeight: database.tileSize,
                     data: data,
                 }));
 

@@ -14,6 +14,8 @@ import {
     Button,
     NumberInput,
     NumberInputField,
+    Radio,
+    RadioGroup,
     useDisclosure,
 } from "@chakra-ui/react";
 import { Formik, Field, FieldProps } from "formik";
@@ -52,67 +54,55 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
     // Edit the properties of the scene
     const editSceneProperties = (values: {
         sceneName: string;
-        gridWidth: number;
-        gridHeight: number;
+        tileSizeRadioValue: string;
+        rowTilesNum: number;
+        columnTilesNum: number;
     }) => {
         setScenePropertiesEditing(true);
         const sceneInfo = SceneManager.scenesInfo[itemIndex.current];
         const sceneId = Number(sceneInfo.id);
-        if (sceneInfo.name !== values.sceneName) {
-            SceneManager.renameScene(sceneId, values.sceneName, () => {
-                if (
-                    !sceneInfo?.width ||
-                    !sceneInfo?.height ||
-                    (sceneInfo.width === values.gridWidth &&
-                        sceneInfo.height === values.gridHeight)
-                ) {
-                    setScenePropertiesEditing(false);
-                    return;
-                } else {
-                    SceneManager.resizeScene(
-                        sceneId,
-                        values.gridWidth,
-                        values.gridHeight,
-                        () => {
-                            if (
-                                phaserRef.current?.game &&
-                                EditorState.currentSceneId === sceneInfo.id
-                            ) {
-                                phaserRef.current.game.scale.setGameSize(
-                                    values.gridWidth * 32,
-                                    values.gridHeight * 32
-                                );
-                                currentScene?.scene.start("Game", {
-                                    id: EditorState.currentSceneId,
-                                });
-                            }
-                            setScenePropertiesEditing(false);
-                        }
-                    );
-                }
-            });
-        } else {
+
+        const tileSize = (() => {
+            switch (values.tileSizeRadioValue) {
+                case "0":
+                    return 8;
+                case "1":
+                    return 16;
+                case "2":
+                    return 32;
+                case "3":
+                    return 48;
+                case "4":
+                    return 64;
+                default:
+                    return 128;
+            }
+        })();
+
+        const afterRenameScene = () => {
             if (
                 !sceneInfo?.width ||
                 !sceneInfo?.height ||
-                (sceneInfo.width === values.gridWidth &&
-                    sceneInfo.height === values.gridHeight)
+                (sceneInfo.width === values.rowTilesNum &&
+                    sceneInfo.height === values.columnTilesNum &&
+                    sceneInfo.tileSize === tileSize)
             ) {
                 setScenePropertiesEditing(false);
                 return;
             } else {
                 SceneManager.resizeScene(
                     sceneId,
-                    values.gridWidth,
-                    values.gridHeight,
+                    values.rowTilesNum,
+                    values.columnTilesNum,
+                    tileSize,
                     () => {
                         if (
                             phaserRef.current?.game &&
-                            EditorState.currentSceneId === sceneId
+                            EditorState.currentSceneId === sceneInfo.id
                         ) {
                             phaserRef.current.game.scale.setGameSize(
-                                values.gridWidth * 32,
-                                values.gridHeight * 32
+                                values.rowTilesNum * tileSize,
+                                values.columnTilesNum * tileSize
                             );
                             currentScene?.scene.start("Game", {
                                 id: EditorState.currentSceneId,
@@ -122,7 +112,16 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                     }
                 );
             }
-        }
+        };
+
+        // When the scene name changed
+        if (sceneInfo.name !== values.sceneName)
+            SceneManager.renameScene(
+                sceneId,
+                values.sceneName,
+                afterRenameScene
+            );
+        else afterRenameScene();
     };
 
     return (
@@ -134,8 +133,10 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                 onTabClick={(_e, _t, _i) => {
                     EditorState.setCurrentSceneId(Number(_t.id));
                     phaserRef.current?.game?.scale.setGameSize(
-                        SceneManager.scenesInfo[_i].width * 32,
-                        SceneManager.scenesInfo[_i].height * 32
+                        SceneManager.scenesInfo[_i].width *
+                            SceneManager.scenesInfo[_i].tileSize,
+                        SceneManager.scenesInfo[_i].height *
+                            SceneManager.scenesInfo[_i].tileSize
                     );
                     currentScene?.scene.start("Game", { id: _t.id });
                 }}
@@ -182,10 +183,16 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                                         phaserRef.current?.game?.scale.setGameSize(
                                             SceneManager.scenesInfo[
                                                 itemIndex.current
-                                            ].width * 32,
+                                            ].width *
+                                                SceneManager.scenesInfo[
+                                                    itemIndex.current
+                                                ].tileSize,
                                             SceneManager.scenesInfo[
                                                 itemIndex.current
-                                            ].height * 32
+                                            ].height *
+                                                SceneManager.scenesInfo[
+                                                    itemIndex.current
+                                                ].tileSize
                                         );
                                         itemIndex.current = Number(
                                             SceneManager.scenesInfo[0].id
@@ -218,10 +225,30 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                                 sceneName:
                                     SceneManager.scenesInfo[itemIndex.current]
                                         ?.name,
-                                gridWidth:
+                                tileSizeRadioValue: ((): string => {
+                                    const tileSize =
+                                        SceneManager.scenesInfo[
+                                            itemIndex.current
+                                        ]?.tileSize;
+                                    switch (tileSize) {
+                                        case 8:
+                                            return "0";
+                                        case 16:
+                                            return "1";
+                                        case 32:
+                                            return "2";
+                                        case 48:
+                                            return "3";
+                                        case 64:
+                                            return "4";
+                                        default:
+                                            return "5";
+                                    }
+                                })(),
+                                rowTilesNum:
                                     SceneManager.scenesInfo[itemIndex.current]
                                         ?.width,
-                                gridHeight:
+                                columnTilesNum:
                                     SceneManager.scenesInfo[itemIndex.current]
                                         ?.height,
                             }}
@@ -237,9 +264,57 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                                                 name="sceneName"
                                             />
                                         </FormControl>
+
                                         <FormControl>
-                                            <FormLabel>Grids' width</FormLabel>
-                                            <Field name="gridWidth">
+                                            <FormLabel>
+                                                Tile size (pixels per side of
+                                                each grid)
+                                            </FormLabel>
+                                            <Field name="tileSizeRadioValue">
+                                                {({
+                                                    form,
+                                                    field,
+                                                }: FieldProps) => (
+                                                    <RadioGroup
+                                                        {...field}
+                                                        onChange={(value) => {
+                                                            form.setFieldValue(
+                                                                field.name,
+                                                                value
+                                                            );
+                                                        }}
+                                                    >
+                                                        <Stack direction="row">
+                                                            <Radio value="0">
+                                                                8px
+                                                            </Radio>
+                                                            <Radio value="1">
+                                                                16px
+                                                            </Radio>
+                                                            <Radio value="2">
+                                                                32px
+                                                            </Radio>
+                                                            <Radio value="3">
+                                                                48px
+                                                            </Radio>
+                                                            <Radio value="4">
+                                                                64px
+                                                            </Radio>
+                                                            <Radio value="5">
+                                                                128px
+                                                            </Radio>
+                                                        </Stack>
+                                                    </RadioGroup>
+                                                )}
+                                            </Field>
+                                        </FormControl>
+
+                                        <FormControl>
+                                            <FormLabel>
+                                                Number of tiles in a row
+                                                (horizontal grids)
+                                            </FormLabel>
+                                            <Field name="rowTilesNum">
                                                 {({
                                                     form,
                                                     field,
@@ -263,8 +338,11 @@ const SceneList: FC<ScenesListProps> = ({ phaserRef, currentScene }) => {
                                             </Field>
                                         </FormControl>
                                         <FormControl>
-                                            <FormLabel>Grids' Height</FormLabel>
-                                            <Field name="gridHeight">
+                                            <FormLabel>
+                                                Number of tiles in a column
+                                                (vertical grids)
+                                            </FormLabel>
+                                            <Field name="columnTilesNum">
                                                 {({
                                                     form,
                                                     field,
