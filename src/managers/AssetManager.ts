@@ -39,6 +39,8 @@ export class AssetManager {
      */
     static importAsset(
         name: string,
+        width: number,
+        height: number,
         data: string | ArrayBuffer,
         subType: string
     ) {
@@ -55,8 +57,8 @@ export class AssetManager {
                 name: name,
                 type: AssetManager.type.IMAGE,
                 subType: subType,
-                width: 1,
-                height: 1,
+                width: width,
+                height: height,
                 data: data,
             };
 

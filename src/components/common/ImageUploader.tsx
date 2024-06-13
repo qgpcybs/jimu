@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HStack, Button, Input, Flex } from "@chakra-ui/react";
+import { HStack, Button, Input } from "@chakra-ui/react";
 import { AssetManager } from "../../managers/AssetManager";
 
 export const ImageUploader = () => {
@@ -18,12 +18,19 @@ export const ImageUploader = () => {
         const fileReader = new FileReader();
         fileReader.onload = async (event) => {
             const result = event.target?.result;
-            if (result)
-                await AssetManager.importAsset(
-                    image.name,
-                    result,
-                    AssetManager.subType.TILESET
-                );
+            if (result) {
+                const img = new Image();
+                img.onload = async () => {
+                    await AssetManager.importAsset(
+                        image.name,
+                        img.width,
+                        img.height,
+                        result,
+                        AssetManager.subType.TILESET
+                    );
+                };
+                img.src = result.toString();
+            }
         };
         fileReader.readAsDataURL(image);
     };
