@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Box, Button, Input } from "@chakra-ui/react";
+import { HStack, Button, Input, Flex } from "@chakra-ui/react";
 import { AssetManager } from "../../managers/AssetManager";
 
-export const ImageUpload = () => {
+export const ImageUploader = () => {
     // Image object
     const [image, setImage] = useState<File | null>();
 
@@ -29,13 +29,29 @@ export const ImageUpload = () => {
     };
 
     return (
-        <Box>
-            <Input type="file" accept="image/*" onChange={handleFileChange} />
+        <HStack width="100%">
+            <Button
+                as="label"
+                htmlFor="file-input"
+                cursor="pointer"
+                variant="outline"
+                colorScheme="green"
+                className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis"
+            >
+                {image ? image.name : "Choose File"}
+            </Button>
+            <Input
+                id="file-input"
+                type="file"
+                accept="image/png, image/jpeg"
+                onChange={handleFileChange}
+                style={{ display: "none" }}
+            />
             <Button onClick={handleFileUpload} colorScheme="green">
                 {"Confirm"}
             </Button>
-        </Box>
+        </HStack>
     );
 };
 
-export default ImageUpload;
+export default ImageUploader;

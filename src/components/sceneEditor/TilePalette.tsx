@@ -1,9 +1,6 @@
 import { FC, useState } from "react";
-import { Formik, Field } from "formik";
 import Tile from "./Tile";
-import FileInput from "../common/FileInput";
-import { Stack, Button, ChakraProvider } from "@chakra-ui/react";
-import ImageUpload from "../common/ImageUpload";
+import ImageUploader from "../common/ImageUploader";
 
 interface TilePaletteProps {
     onSelectTiles: (
@@ -86,30 +83,28 @@ const TilePalette: FC<TilePaletteProps> = ({ onSelectTiles }) => {
     };
 
     return (
-        <div className="select-none">
-            {/* Temp Code */}
-            <div className="text-left my-2 ml-2 mr-4">
-                <span className="break-words font-bold">
-                    Upload other tilesets
-                </span>
-                <ChakraProvider>
-                    <ImageUpload />
-                </ChakraProvider>
+        <div className="select-none ml-1">
+            <div className="text-left my-2 mr-4 w-96">
+                <span className="font-bold">Upload other tilesets</span>
+                <ImageUploader />
             </div>
 
-            <div
-                className="grid grid-cols-[repeat(22,minmax(0,1rem))] gap-[0.125rem]"
-                onMouseUp={() => selectTilesEnd()}
-            >
-                {tiles.map((_t, _i) => (
-                    <div
-                        key={_i}
-                        onMouseDown={() => selectTilesStart(_i)}
-                        onMouseOver={() => selectTilesOver(_i)}
-                    >
-                        <Tile index={_i} cursorVisible={selectedList[_i]} />
-                    </div>
-                ))}
+            <div className="text-left ">
+                <span className="font-bold">Tileset</span>
+                <div
+                    className="grid grid-cols-[repeat(22,minmax(0,1rem))] gap-[0.125rem]"
+                    onMouseUp={() => selectTilesEnd()}
+                >
+                    {tiles.map((_t, _i) => (
+                        <div
+                            key={_i}
+                            onMouseDown={() => selectTilesStart(_i)}
+                            onMouseOver={() => selectTilesOver(_i)}
+                        >
+                            <Tile index={_i} cursorVisible={selectedList[_i]} />
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
