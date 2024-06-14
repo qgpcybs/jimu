@@ -3,9 +3,11 @@ import { memo } from "react";
 function Tile({
     index,
     cursorVisible,
+    src,
 }: {
     index: number;
     cursorVisible: boolean;
+    src: string;
 }) {
     return (
         <div className="tileContent relative w-4 h-4 overflow-clip rounded-sm">

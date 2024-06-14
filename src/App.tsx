@@ -31,6 +31,7 @@ import { DatabaseManager } from "./managers/DatabaseManager";
 import Toolset from "./components/sceneEditor/Toolset";
 import { SceneDatabase } from "./api/Scenes";
 import SceneList from "./components/sceneEditor/ScenesList";
+import { AssetManager } from "./managers/AssetManager";
 
 /**
  * Entrance function
@@ -149,34 +150,39 @@ function App() {
     const editorInit = () => {
         // Open database
         DatabaseManager.init(() => {
-            // Get scenes information
-            SceneManager.updateScenesInfo(() => {
-                // There's no good way to solve the problem of useState assignments completing one frame slower, so let's do it the ugly way first
-                setTimeout(() => {
-                    // Have any scenes been created?
-                    if (SceneManager.scenesInfo.length < 1) {
-                        SceneManager.createScene(
-                            "New Scene",
-                            80,
-                            68,
-                            16,
-                            0,
-                            () => {
-                                EventBus.emit("editor-init-over");
-                            }
-                        );
-                    } else {
-                        // Set the default current scene id
-                        const sceneInfo = SceneManager.scenesInfo[0];
-                        const sceneId = Number(SceneManager.scenesInfo[0].id);
-                        EditorState.setCurrentSceneId(sceneId);
-                        phaserRef.current?.game?.scale.setGameSize(
-                            sceneInfo.width * sceneInfo.tileSize,
-                            sceneInfo.height * sceneInfo.tileSize
-                        );
-                        EventBus.emit("editor-init-over");
-                    }
-                }, 1);
+            // Init assets database
+            AssetManager.initAssetTable(() => {
+                // Get scenes information
+                SceneManager.updateScenesInfo(() => {
+                    // There's no good way to solve the problem of useState assignments completing one frame slower, so let's do it the ugly way first
+                    setTimeout(() => {
+                        // Have any scenes been created?
+                        if (SceneManager.scenesInfo.length < 1) {
+                            SceneManager.createScene(
+                                "New Scene",
+                                80,
+                                68,
+                                16,
+                                0,
+                                () => {
+                                    EventBus.emit("editor-init-over");
+                                }
+                            );
+                        } else {
+                            // Set the default current scene id
+                            const sceneInfo = SceneManager.scenesInfo[0];
+                            const sceneId = Number(
+                                SceneManager.scenesInfo[0].id
+                            );
+                            EditorState.setCurrentSceneId(sceneId);
+                            phaserRef.current?.game?.scale.setGameSize(
+                                sceneInfo.width * sceneInfo.tileSize,
+                                sceneInfo.height * sceneInfo.tileSize
+                            );
+                            EventBus.emit("editor-init-over");
+                        }
+                    }, 1);
+                });
             });
         });
     };

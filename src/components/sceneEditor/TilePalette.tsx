@@ -101,7 +101,11 @@ const TilePalette: FC<TilePaletteProps> = ({ onSelectTiles }) => {
                             onMouseDown={() => selectTilesStart(_i)}
                             onMouseOver={() => selectTilesOver(_i)}
                         >
-                            <Tile index={_i} cursorVisible={selectedList[_i]} />
+                            <Tile
+                                index={_i}
+                                cursorVisible={selectedList[_i]}
+                                src={"a"}
+                            />
                         </div>
                     ))}
                 </div>

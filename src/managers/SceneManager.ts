@@ -390,10 +390,18 @@ export class SceneManager {
         };
     }
 
+    /**
+     * Temp code [TODO]
+     */
     static enableStoreLocally(): IDBFactory {
         return window.indexedDB;
     }
 
+    /**
+     * Create a new layer
+     * @param sceneId Scene id
+     * @param layerName Layer name
+     */
     static createLayer(
         sceneId: number,
         layerName?: string | undefined,

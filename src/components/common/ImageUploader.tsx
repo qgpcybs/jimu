@@ -20,6 +20,7 @@ export const ImageUploader = () => {
             const result = event.target?.result;
             if (result) {
                 const img = new Image();
+                console.log(result)
                 img.onload = async () => {
                     await AssetManager.importAsset(
                         image.name,
