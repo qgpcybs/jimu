@@ -26,12 +26,11 @@ Current development phase:
 
 Recognizing that many Web2 developers may not be acquainted with Web3 development, Jimu strives to bridge the gap and encourage traditional Web2 developers to venture into Web3 development. In order to achieve this goal, each module of Jimu takes into account the implementation of the onchain logic for developers who are not familiar with Web3 development.
 
-Chains currently included in planning:
-- Starknet (Compatible with Dojo)
-- Aptos (Generating game assets with RMUD)
+AW Engine / Language currently included in planning:
+- Dojo / Cairo (Starknet)
+- RMUD / Move (Aptos)
+- MUD / Solidity (Redstone, Arbitrum)
 
-Development Progress Gantt Chart: 
-[Portal](https://game-jimu.notion.site/5be8db7ff5344bcb80747186df54d9da?v=0751228d0cc94a778b8d5775ae6be39c&pvs=4)
 
 ### Versions
 
